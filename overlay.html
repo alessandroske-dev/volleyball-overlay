@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Volleyball Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: transparent;
+    width: 1920px; height: 1080px;
+    overflow: hidden;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  /* ── COMPETITION BADGE ── */
+  #competition {
+    position: absolute;
+    top: 32px; left: 40px;
+    animation: slideIn 0.6s ease both;
+  }
+  .comp-label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; color: #f0a500;
+    text-transform: uppercase;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.9);
+    display: block;
+  }
+  .comp-name {
+    font-size: 24px; font-weight: 900;
+    color: #fff; text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.95);
+    display: block;
+  }
+
+  /* ── SCOREBOARD ── */
+  #scoreboard {
+    position: absolute;
+    bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; align-items: center;
+    filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75));
+  }
+
+  .team-block {
+    display: flex; align-items: center;
+    background: #1a1a1a;
+    height: 74px; padding: 0 22px;
+    gap: 14px; min-width: 260px;
+  }
+  .team-block.home {
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
+    padding-right: 32px;
+  }
+  .team-block.away {
+    clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%);
+    padding-left: 32px;
+  }
+  .team-logo {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: #2a2a2a; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0; overflow: hidden;
+  }
+  .team-logo img { width: 100%; height: 100%; object-fit: contain; }
+  .team-name {
+    font-weight: 900; font-size: 28px;
+    letter-spacing: 0.04em; color: #fff;
+    text-transform: uppercase; white-space: nowrap;
+  }
+
+  .sets-box {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: #111; height: 74px; width: 50px; gap: 2px;
+  }
+  .sets-label {
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.14em; color: #666; text-transform: uppercase;
+  }
+  .sets-value { font-size: 30px; font-weight: 900; color: #fff; line-height: 1; }
+
+  .center-block {
+    display: flex; align-items: center;
+    background: #f0a500; height: 74px;
+  }
+  .score-box {
+    display: flex; align-items: center;
+    justify-content: center; width: 66px; height: 74px;
+  }
+  .score-value {
+    font-size: 48px; font-weight: 900;
+    color: #1a1a1a; line-height: 1;
+    transition: transform 0.12s cubic-bezier(.36,.07,.19,.97);
+  }
+  .score-value.bump { transform: scale(1.3); }
+  .score-sep {
+    width: 3px; height: 38px;
+    background: rgba(0,0,0,0.2); border-radius: 2px;
+  }
+
+  /* ── SET POPUP ── */
+  #set-popup {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: #f0a500; color: #1a1a1a;
+    padding: 18px 52px;
+    font-size: 38px; font-weight: 900;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+    transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 100; white-space: nowrap;
+  }
+  #set-popup.show { transform: translate(-50%, -50%) scale(1); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-24px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="competition">
+  <span class="comp-label" id="comp-label-el">Eccellenza FIPAV</span>
+  <span class="comp-name" id="comp-name-el">Finale 3° - 4° Posto</span>
+</div>
+
+<div id="scoreboard">
+  <div class="team-block home">
+    <div class="team-logo" id="home-logo">🏐</div>
+    <span class="team-name" id="home-name">CASA</span>
+  </div>
+  <div class="sets-box">
+    <span class="sets-label">Set</span>
+    <span class="sets-value" id="home-sets">0</span>
+  </div>
+  <div class="center-block">
+    <div class="score-box"><span class="score-value" id="home-score">0</span></div>
+    <div class="score-sep"></div>
+    <div class="score-box"><span class="score-value" id="away-score">0</span></div>
+  </div>
+  <div class="sets-box">
+    <span class="sets-label">Set</span>
+    <span class="sets-value" id="away-sets">0</span>
+  </div>
+  <div class="team-block away">
+    <span class="team-name" id="away-name">OSPITE</span>
+    <div class="team-logo" id="away-logo">🏐</div>
+  </div>
+</div>
+
+<div id="set-popup">SET!</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  // ⚠️ SOSTITUISCI con la tua config Firebase (vedi istruzioni)
+  const firebaseConfig = {
+    apiKey: "INSERISCI_QUI",
+    authDomain: "INSERISCI_QUI",
+    databaseURL: "INSERISCI_QUI",
+    projectId: "INSERISCI_QUI",
+    storageBucket: "INSERISCI_QUI",
+    messagingSenderId: "INSERISCI_QUI",
+    appId: "INSERISCI_QUI"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  let prevState = {};
+
+  function bump(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    setTimeout(() => el.classList.remove('bump'), 200);
+  }
+
+  function showPopup(name) {
+    const popup = document.getElementById('set-popup');
+    popup.textContent = `SET — ${name}`;
+    popup.classList.add('show');
+    setTimeout(() => popup.classList.remove('show'), 2800);
+  }
+
+  onValue(ref(db, 'match'), (snap) => {
+    const d = snap.val();
+    if (!d) return;
+
+    document.getElementById('comp-label-el').textContent = d.compLabel  || '';
+    document.getElementById('comp-name-el').textContent  = d.compName   || '';
+    document.getElementById('home-name').textContent     = (d.homeName  || 'CASA').toUpperCase();
+    document.getElementById('away-name').textContent     = (d.awayName  || 'OSPITE').toUpperCase();
+
+    const hs = d.homeScore ?? 0;
+    const as = d.awayScore ?? 0;
+    const hset = d.homeSets ?? 0;
+    const aset = d.awaySets ?? 0;
+
+    if (hs !== prevState.homeScore) { document.getElementById('home-score').textContent = hs; if(hs > (prevState.homeScore||0)) bump('home-score'); }
+    if (as !== prevState.awayScore) { document.getElementById('away-score').textContent = as; if(as > (prevState.awayScore||0)) bump('away-score'); }
+    if (hset !== prevState.homeSets) { document.getElementById('home-sets').textContent = hset; if(hset > (prevState.homeSets||0)) showPopup((d.homeName||'CASA').toUpperCase()); }
+    if (aset !== prevState.awaySets) { document.getElementById('away-sets').textContent = aset; if(aset > (prevState.awaySets||0)) showPopup((d.awayName||'OSPITE').toUpperCase()); }
+
+    prevState = { homeScore: hs, awayScore: as, homeSets: hset, awaySets: aset };
+  });
+</script>
+</body>
+</html>
