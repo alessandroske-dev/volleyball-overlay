@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volleyball Overlay</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: transparent;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  /* ── SCOREBOARD ── */
+  #scoreboard {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0;
+    filter: drop-shadow(0 4px 24px rgba(0,0,0,0.7));
+  }
+
+  .team-block {
+    display: flex;
+    align-items: center;
+    background: #1a1a1a;
+    height: 72px;
+    padding: 0 20px 0 16px;
+    gap: 14px;
+    min-width: 260px;
+  }
+
+  .team-block.home {
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 100%, 0 100%);
+    padding-right: 30px;
+  }
+
+  .team-block.away {
+    clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%);
+    padding-left: 30px;
+  }
+
+  .team-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .team-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .team-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: 0.04em;
+    color: #ffffff;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .sets-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+    height: 72px;
+    width: 48px;
+    gap: 2px;
+  }
+
+  .sets-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #888;
+    text-transform: uppercase;
+  }
+
+  .sets-value {
+    font-size: 28px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1;
+  }
+
+  /* Centro: punti + separatore */
+  .center-block {
+    display: flex;
+    align-items: center;
+    height: 72px;
+    background: #f0a500;
+    gap: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .score-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 72px;
+  }
+
+  .score-value {
+    font-size: 46px;
+    font-weight: 900;
+    color: #1a1a1a;
+    line-height: 1;
+    transition: transform 0.12s cubic-bezier(.36,.07,.19,.97);
+  }
+
+  .score-value.bump {
+    transform: scale(1.25);
+  }
+
+  .score-separator {
+    width: 3px;
+    height: 36px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 2px;
+  }
+
+  /* Logo centrale (opzionale) */
+  .center-emblem {
+    width: 40px;
+    height: 40px;
+    margin: 0 4px;
+    opacity: 0.3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  /* ── SET INDICATORS ── */
+  .sets-indicators {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .set-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #444;
+    transition: background 0.3s;
+  }
+
+  .set-dot.won {
+    background: #f0a500;
+  }
+
+  /* ── COMPETITION BANNER ── */
+  #competition {
+    position: absolute;
+    top: 32px;
+    left: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    animation: slideIn 0.5s ease both;
+  }
+
+  .comp-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: #f0a500;
+    text-transform: uppercase;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+  }
+
+  .comp-name {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+  }
+
+  /* ── SET RESULT POPUP ── */
+  #set-popup {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: #f0a500;
+    color: #1a1a1a;
+    padding: 20px 48px;
+    font-size: 36px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    clip-path: polygon(12px 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+    z-index: 100;
+    white-space: nowrap;
+  }
+
+  #set-popup.show {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* ── CONTROLS (invisibili nello stream) ── */
+  #controls {
+    position: fixed;
+    top: 0; right: 0;
+    background: rgba(0,0,0,0.92);
+    color: #fff;
+    padding: 16px;
+    width: 280px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999;
+    border-left: 3px solid #f0a500;
+  }
+
+  #controls h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f0a500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ctrl-label {
+    flex: 1;
+    color: #aaa;
+  }
+
+  .ctrl-btn {
+    background: #333;
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+  }
+
+  .ctrl-btn:hover { background: #f0a500; color: #111; }
+  .ctrl-btn.danger:hover { background: #e53e3e; }
+
+  .ctrl-val {
+    width: 32px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+  }
+
+  .ctrl-input {
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  .ctrl-divider {
+    border: none;
+    border-top: 1px solid #333;
+    margin: 2px 0;
+  }
+
+  .ctrl-section {
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .toggle-ctrl {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    background: #f0a500;
+    border: none;
+    color: #111;
+    font-weight: 900;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 10000;
+    font-family: 'Barlow Condensed', sans-serif;
+    letter-spacing: 0.06em;
+    display: none; /* nascosto quando panel è aperto */
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- COMPETITION BADGE -->
+<div id="competition">
+  <span class="comp-label" id="comp-label-el">Eccellenza FIPAV</span>
+  <span class="comp-name" id="comp-name-el">Finale 3° - 4° Posto</span>
+</div>
+
+<!-- MAIN SCOREBOARD -->
+<div id="scoreboard">
+
+  <!-- HOME TEAM -->
+  <div class="team-block home">
+    <div class="team-logo" id="home-logo">🏐</div>
+    <span class="team-name" id="home-name">BEDIZZOLE</span>
+  </div>
+
+  <div class="sets-box">
+    <span class="sets-label">Set</span>
+    <span class="sets-value" id="home-sets">0</span>
+  </div>
+
+  <!-- SCORE CENTER -->
+  <div class="center-block">
+    <div class="score-box">
+      <span class="score-value" id="home-score">0</span>
+    </div>
+    <div class="score-separator"></div>
+    <div class="score-box">
+      <span class="score-value" id="away-score">0</span>
+    </div>
+  </div>
+
+  <div class="sets-box">
+    <span class="sets-label">Set</span>
+    <span class="sets-value" id="away-sets">0</span>
+  </div>
+
+  <!-- AWAY TEAM -->
+  <div class="team-block away">
+    <span class="team-name" id="away-name">PISOGNE</span>
+    <div class="team-logo" id="away-logo">🏐</div>
+  </div>
+
+</div>
+
+<!-- SET WIN POPUP -->
+<div id="set-popup">SET VINTO!</div>
+
+<!-- CONTROL PANEL -->
+<div id="controls">
+  <h3>⚙ Controllo Overlay</h3>
+
+  <span class="ctrl-section">Competizione</span>
+  <input class="ctrl-input" id="inp-comp-label" value="Eccellenza FIPAV" placeholder="Etichetta" oninput="updateComp()">
+  <input class="ctrl-input" id="inp-comp-name" value="Finale 3° - 4° Posto" placeholder="Fase" oninput="updateComp()">
+
+  <hr class="ctrl-divider">
+  <span class="ctrl-section">Squadra Casa</span>
+  <input class="ctrl-input" id="inp-home-name" value="BEDIZZOLE" placeholder="Nome squadra" oninput="updateNames()">
+
+  <div class="ctrl-row">
+    <span class="ctrl-label">Punti</span>
+    <button class="ctrl-btn danger" onclick="changeScore('home',-1)">−</button>
+    <span class="ctrl-val" id="ctrl-home-score">0</span>
+    <button class="ctrl-btn" onclick="changeScore('home',+1)">+</button>
+  </div>
+  <div class="ctrl-row">
+    <span class="ctrl-label">Set vinti</span>
+    <button class="ctrl-btn danger" onclick="changeSet('home',-1)">−</button>
+    <span class="ctrl-val" id="ctrl-home-sets">0</span>
+    <button class="ctrl-btn" onclick="changeSet('home',+1)">+</button>
+  </div>
+
+  <hr class="ctrl-divider">
+  <span class="ctrl-section">Squadra Ospite</span>
+  <input class="ctrl-input" id="inp-away-name" value="PISOGNE" placeholder="Nome squadra" oninput="updateNames()">
+
+  <div class="ctrl-row">
+    <span class="ctrl-label">Punti</span>
+    <button class="ctrl-btn danger" onclick="changeScore('away',-1)">−</button>
+    <span class="ctrl-val" id="ctrl-away-score">0</span>
+    <button class="ctrl-btn" onclick="changeScore('away',+1)">+</button>
+  </div>
+  <div class="ctrl-row">
+    <span class="ctrl-label">Set vinti</span>
+    <button class="ctrl-btn danger" onclick="changeSet('away',-1)">−</button>
+    <span class="ctrl-val" id="ctrl-away-sets">0</span>
+    <button class="ctrl-btn" onclick="changeSet('away',+1)">+</button>
+  </div>
+
+  <hr class="ctrl-divider">
+  <button class="ctrl-btn" style="width:100%;height:36px;font-size:13px;letter-spacing:0.05em;" onclick="resetScores()">🔄 Reset punti set</button>
+</div>
+
+<script>
+  const state = {
+    homeScore: 0, awayScore: 0,
+    homeSets: 0,  awaySets: 0
+  };
+
+  function bump(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    setTimeout(() => el.classList.remove('bump'), 200);
+  }
+
+  function changeScore(team, delta) {
+    const key = team === 'home' ? 'homeScore' : 'awayScore';
+    state[key] = Math.max(0, state[key] + delta);
+    const scoreId = team === 'home' ? 'home-score' : 'away-score';
+    const ctrlId  = team === 'home' ? 'ctrl-home-score' : 'ctrl-away-score';
+    document.getElementById(scoreId).textContent = state[key];
+    document.getElementById(ctrlId).textContent  = state[key];
+    if (delta > 0) bump(scoreId);
+  }
+
+  function changeSet(team, delta) {
+    const key = team === 'home' ? 'homeSets' : 'awaySets';
+    state[key] = Math.max(0, state[key] + delta);
+    const setId  = team === 'home' ? 'home-sets' : 'away-sets';
+    const ctrlId = team === 'home' ? 'ctrl-home-sets' : 'ctrl-away-sets';
+    document.getElementById(setId).textContent  = state[key];
+    document.getElementById(ctrlId).textContent = state[key];
+    if (delta > 0) showSetPopup(team);
+  }
+
+  function showSetPopup(team) {
+    const name = team === 'home'
+      ? document.getElementById('home-name').textContent
+      : document.getElementById('away-name').textContent;
+    const popup = document.getElementById('set-popup');
+    popup.textContent = `SET — ${name}`;
+    popup.classList.add('show');
+    setTimeout(() => popup.classList.remove('show'), 2800);
+  }
+
+  function resetScores() {
+    state.homeScore = 0; state.awayScore = 0;
+    ['home-score','away-score','ctrl-home-score','ctrl-away-score']
+      .forEach(id => document.getElementById(id).textContent = 0);
+  }
+
+  function updateNames() {
+    document.getElementById('home-name').textContent =
+      document.getElementById('inp-home-name').value.toUpperCase();
+    document.getElementById('away-name').textContent =
+      document.getElementById('inp-away-name').value.toUpperCase();
+  }
+
+  function updateComp() {
+    document.getElementById('comp-label-el').textContent =
+      document.getElementById('inp-comp-label').value;
+    document.getElementById('comp-name-el').textContent =
+      document.getElementById('inp-comp-name').value;
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', e => {
+    switch(e.key) {
+      case 'q': changeScore('home', +1); break;
+      case 'a': changeScore('home', -1); break;
+      case 'o': changeScore('away', +1); break;
+      case 'l': changeScore('away', -1); break;
+      case 'w': changeSet('home', +1);   break;
+      case 'p': changeSet('away', +1);   break;
+      case 'r': resetScores();           break;
+    }
+  });
+</script>
+</body>
+</html>
