@@ -146,11 +146,11 @@
     else      { img.classList.remove('visible'); emoji.style.display = 'block'; }
   }
 
-  function applySponsor(url, label) {
+  function applySponsor(url, label, visible) {
     const wrap = document.getElementById('sponsor');
     const img  = document.getElementById('sponsor-img');
     const lbl  = document.getElementById('sponsor-label');
-    if (url) {
+    if (url && visible) {
       img.src = url;
       lbl.textContent = label || '';
       wrap.classList.add('visible');
@@ -170,7 +170,7 @@
 
     applyLogo('home', d.homeLogo || '');
     applyLogo('away', d.awayLogo || '');
-    applySponsor(d.sponsorLogo || '', d.sponsorLabel || '');
+    applySponsor(d.sponsorLogo || '', d.sponsorLabel || '', !!d.sponsorVisible);
 
     const hs = d.homeScore ?? 0, as2 = d.awayScore ?? 0;
     const hset = d.homeSets ?? 0, aset = d.awaySets ?? 0;
