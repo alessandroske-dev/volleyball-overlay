@@ -95,6 +95,19 @@
   .act-btn.danger { background: #2a1a1a; color: #e53e3e; border: 1px solid #e53e3e44; }
   .act-btn.full { grid-column: span 2; }
 
+
+  /* TICKER CARD */
+  .ticker-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    border-top: 3px solid #f0a500;
+  }
+  textarea.field {
+    resize: none; height: 72px; line-height: 1.4;
+    font-size: 14px; font-weight: 600;
+    font-family: 'Barlow', sans-serif;
+  }
   #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #333; transition: transform 0.3s; white-space: nowrap; z-index: 999; }
   #toast.show { transform: translateX(-50%) translateY(0); }
   .divider { height: 1px; background: var(--border); margin: 16px 16px 0; }
@@ -138,7 +151,23 @@
   </div>
 </div>
 
+
 <div class="divider"></div>
+
+<!-- TICKER -->
+<div class="section">
+  <div class="section-title">📰 Testo Scorrevole</div>
+  <div class="ticker-card">
+    <textarea class="field" id="inp-ticker-text" placeholder="Es. Benvenuti alla finale regionale FIPAV Brescia 2026!"></textarea>
+    <div class="sponsor-toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" id="tog-ticker" onchange="pushAll(false)">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">Mostra ticker sullo stream</span>
+    </div>
+  </div>
+</div>
 
 <!-- SQUADRE -->
 <div class="section">
@@ -233,6 +262,7 @@
     homeName: 'BEDIZZOLE', awayName: 'PISOGNE',
     homeLogo: '', awayLogo: '',
     sponsorLogo: '', sponsorLabel: '', sponsorVisible: false,
+    tickerText: '', tickerVisible: false,
     homeScore: 0, awayScore: 0, homeSets: 0, awaySets: 0
   };
 
@@ -261,6 +291,8 @@
     document.getElementById('inp-home-logo').value    = d.homeLogo     || '';
     document.getElementById('inp-away-logo').value    = d.awayLogo     || '';
     document.getElementById('inp-sponsor-logo').value = d.sponsorLogo  || '';
+    document.getElementById('inp-ticker-text').value   = d.tickerText   || '';
+    document.getElementById('tog-ticker').checked       = !!d.tickerVisible;
     document.getElementById('inp-sponsor-label').value= d.sponsorLabel || '';
     document.getElementById('tog-sponsor').checked    = !!d.sponsorVisible;
     applyLogoPreview('home', d.homeLogo || '');
@@ -303,6 +335,8 @@
     state.sponsorLogo    = document.getElementById('inp-sponsor-logo').value.trim();
     state.sponsorLabel   = document.getElementById('inp-sponsor-label').value.trim();
     state.sponsorVisible = document.getElementById('tog-sponsor').checked;
+    state.tickerText    = document.getElementById('inp-ticker-text').value.trim();
+    state.tickerVisible = document.getElementById('tog-ticker').checked;
     set(matchRef, state);
     if (showToast) toast('Salvato!');
   };

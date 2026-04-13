@@ -59,6 +59,56 @@
   #set-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: #f0a500; color: #1a1a1a; padding: 18px 52px; font-size: 38px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); z-index: 100; white-space: nowrap; }
   #set-popup.show { transform: translate(-50%, -50%) scale(1); }
 
+
+  /* TICKER */
+  #ticker-wrap {
+    position: absolute;
+    bottom: 122px; /* just above scoreboard (74px height + 40px bottom + 8px gap) */
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    align-items: center;
+    background: #1a1a1a;
+    height: 34px;
+    overflow: hidden;
+    filter: drop-shadow(0 3px 10px rgba(0,0,0,0.6));
+    white-space: nowrap;
+  }
+  #ticker-wrap.visible { display: flex; }
+
+  #ticker-tag {
+    background: #f0a500;
+    color: #1a1a1a;
+    font-size: 13px; font-weight: 900;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0 14px;
+    height: 100%; display: flex; align-items: center;
+    flex-shrink: 0;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 100%, 0 100%);
+    padding-right: 20px;
+  }
+
+  #ticker-track {
+    overflow: hidden;
+    flex: 1;
+    height: 100%;
+    position: relative;
+  }
+
+  #ticker-text {
+    display: inline-block;
+    white-space: nowrap;
+    font-size: 18px; font-weight: 700;
+    color: #fff; letter-spacing: 0.04em;
+    line-height: 34px;
+    padding-left: 100%;
+    animation: ticker-scroll linear infinite;
+  }
+
+  @keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 </style>
@@ -74,6 +124,14 @@
 <div id="sponsor">
   <img id="sponsor-img" alt="Sponsor">
   <span id="sponsor-label">Sponsor</span>
+</div>
+
+<!-- TICKER -->
+<div id="ticker-wrap">
+  <div id="ticker-tag">📢 News</div>
+  <div id="ticker-track">
+    <span id="ticker-text"></span>
+  </div>
 </div>
 
 <div id="scoreboard">
@@ -159,6 +217,23 @@
     }
   }
 
+
+  function applyTicker(text, visible) {
+    const wrap = document.getElementById('ticker-wrap');
+    const span = document.getElementById('ticker-text');
+    if (text && visible) {
+      span.textContent = text + '   •   ' + text + '   •   ';
+      wrap.classList.add('visible');
+      // Speed: ~120px/s — adapt duration to text length
+      const trackWidth = document.getElementById('ticker-track').offsetWidth;
+      const textWidth  = span.scrollWidth / 2; // half because text is doubled
+      const duration   = Math.max(6, (textWidth + trackWidth) / 120);
+      span.style.animationDuration = duration + 's';
+    } else {
+      wrap.classList.remove('visible');
+    }
+  }
+
   onValue(ref(db, 'match'), (snap) => {
     const d = snap.val();
     if (!d) return;
@@ -171,6 +246,7 @@
     applyLogo('home', d.homeLogo || '');
     applyLogo('away', d.awayLogo || '');
     applySponsor(d.sponsorLogo || '', d.sponsorLabel || '', !!d.sponsorVisible);
+    applyTicker(d.tickerText || '', !!d.tickerVisible);
 
     const hs = d.homeScore ?? 0, as2 = d.awayScore ?? 0;
     const hset = d.homeSets ?? 0, aset = d.awaySets ?? 0;
