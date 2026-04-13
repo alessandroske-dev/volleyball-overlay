@@ -63,7 +63,7 @@
   /* TICKER */
   #ticker-wrap {
     position: absolute;
-    bottom: 122px; /* just above scoreboard (74px height + 40px bottom + 8px gap) */
+    bottom: 4px; /* below scoreboard */
     left: 50%;
     transform: translateX(-50%);
     display: none;
@@ -101,13 +101,13 @@
     font-size: 18px; font-weight: 700;
     color: #fff; letter-spacing: 0.04em;
     line-height: 34px;
-    padding-left: 100%;
+    padding-left: 100vw;
     animation: ticker-scroll linear infinite;
   }
 
   @keyframes ticker-scroll {
     0%   { transform: translateX(0); }
-    100% { transform: translateX(-100%); }
+    100% { transform: translateX(calc(-100% - 100vw)); }
   }
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
@@ -219,16 +219,22 @@
 
 
   function applyTicker(text, visible) {
-    const wrap = document.getElementById('ticker-wrap');
-    const span = document.getElementById('ticker-text');
+    const wrap  = document.getElementById('ticker-wrap');
+    const span  = document.getElementById('ticker-text');
+    const track = document.getElementById('ticker-track');
     if (text && visible) {
-      span.textContent = text + '   •   ' + text + '   •   ';
+      span.textContent = text;
       wrap.classList.add('visible');
-      // Speed: ~120px/s — adapt duration to text length
-      const trackWidth = document.getElementById('ticker-track').offsetWidth;
-      const textWidth  = span.scrollWidth / 2; // half because text is doubled
-      const duration   = Math.max(6, (textWidth + trackWidth) / 120);
-      span.style.animationDuration = duration + 's';
+      // Calcola durata in base alla larghezza reale del testo
+      // Il testo parte da destra (padding-left:100%) e scorre fino a scomparire a sinistra
+      requestAnimationFrame(() => {
+        const textWidth  = span.scrollWidth;
+        const trackWidth = track.offsetWidth;
+        // px/s: testo corto più lento, testo lungo proporzionale
+        const speed    = 120; // px al secondo
+        const duration = (textWidth + trackWidth) / speed;
+        span.style.animationDuration = Math.max(5, duration) + 's';
+      });
     } else {
       wrap.classList.remove('visible');
     }
