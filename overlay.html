@@ -6,130 +6,82 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: transparent;
-    width: 1920px; height: 1080px;
-    overflow: hidden;
-    font-family: 'Barlow Condensed', sans-serif;
+  body { background: transparent; width: 1920px; height: 1080px; overflow: hidden; font-family: 'Barlow Condensed', sans-serif; }
+
+  /* COMPETITION */
+  #competition { position: absolute; top: 32px; left: 40px; animation: slideIn 0.6s ease both; }
+  .comp-label { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: #f0a500; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,0.9); display: block; }
+  .comp-name  { font-size: 24px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; text-shadow: 0 2px 14px rgba(0,0,0,0.95); display: block; }
+
+  /* SPONSOR BANNER */
+  #sponsor {
+    position: absolute; top: 28px; right: 40px;
+    background: #fff; border-radius: 12px;
+    padding: 10px 16px;
+    display: none; align-items: center; justify-content: center;
+    max-width: 300px; min-width: 120px; max-height: 120px;
+    box-shadow: 0 4px 28px rgba(0,0,0,0.55);
+    animation: fadeIn 0.4s ease both;
+  }
+  #sponsor.visible { display: flex; }
+  #sponsor img { max-width: 268px; max-height: 100px; object-fit: contain; display: block; }
+  #sponsor-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    color: #aaa; text-transform: uppercase; text-align: center;
+    position: absolute; bottom: -18px; right: 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
   }
 
-  /* ── COMPETITION BADGE ── */
-  #competition {
-    position: absolute;
-    top: 32px; left: 40px;
-    animation: slideIn 0.6s ease both;
-  }
-  .comp-label {
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 0.18em; color: #f0a500;
-    text-transform: uppercase;
-    text-shadow: 0 1px 8px rgba(0,0,0,0.9);
-    display: block;
-  }
-  .comp-name {
-    font-size: 24px; font-weight: 900;
-    color: #fff; text-transform: uppercase;
-    letter-spacing: 0.05em;
-    text-shadow: 0 2px 14px rgba(0,0,0,0.95);
-    display: block;
-  }
+  /* SCOREBOARD */
+  #scoreboard { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75)); }
 
-  /* ── SCOREBOARD ── */
-  #scoreboard {
-    position: absolute;
-    bottom: 40px; left: 50%;
-    transform: translateX(-50%);
-    display: flex; align-items: center;
-    filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75));
-  }
+  .team-block { display: flex; align-items: center; background: #1a1a1a; height: 74px; padding: 0 22px; gap: 14px; min-width: 260px; }
+  .team-block.home { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); padding-right: 32px; }
+  .team-block.away { clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%); padding-left: 32px; }
 
-  .team-block {
-    display: flex; align-items: center;
-    background: #1a1a1a;
-    height: 74px; padding: 0 22px;
-    gap: 14px; min-width: 260px;
-  }
-  .team-block.home {
-    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%);
-    padding-right: 32px;
-  }
-  .team-block.away {
-    clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%);
-    padding-left: 32px;
-  }
-  .team-logo {
-    width: 46px; height: 46px; border-radius: 50%;
-    background: #2a2a2a; display: flex;
-    align-items: center; justify-content: center;
-    font-size: 22px; flex-shrink: 0; overflow: hidden;
-  }
-  .team-logo img { width: 100%; height: 100%; object-fit: contain; }
-  .team-name {
-    font-weight: 900; font-size: 28px;
-    letter-spacing: 0.04em; color: #fff;
-    text-transform: uppercase; white-space: nowrap;
-  }
+  .team-logo { width: 46px; height: 46px; border-radius: 50%; background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; overflow: hidden; }
+  .team-logo img { width: 100%; height: 100%; object-fit: contain; display: none; }
+  .team-logo img.visible { display: block; }
+  .team-logo .emoji { line-height: 1; }
+  .team-name { font-weight: 900; font-size: 28px; letter-spacing: 0.04em; color: #fff; text-transform: uppercase; white-space: nowrap; }
 
-  .sets-box {
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    background: #111; height: 74px; width: 50px; gap: 2px;
-  }
-  .sets-label {
-    font-size: 9px; font-weight: 700;
-    letter-spacing: 0.14em; color: #666; text-transform: uppercase;
-  }
+  .sets-box { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #111; height: 74px; width: 50px; gap: 2px; }
+  .sets-label { font-size: 9px; font-weight: 700; letter-spacing: 0.14em; color: #666; text-transform: uppercase; }
   .sets-value { font-size: 30px; font-weight: 900; color: #fff; line-height: 1; }
 
-  .center-block {
-    display: flex; align-items: center;
-    background: #f0a500; height: 74px;
-  }
-  .score-box {
-    display: flex; align-items: center;
-    justify-content: center; width: 66px; height: 74px;
-  }
-  .score-value {
-    font-size: 48px; font-weight: 900;
-    color: #1a1a1a; line-height: 1;
-    transition: transform 0.12s cubic-bezier(.36,.07,.19,.97);
-  }
+  .center-block { display: flex; align-items: center; background: #f0a500; height: 74px; }
+  .score-box { display: flex; align-items: center; justify-content: center; width: 66px; height: 74px; }
+  .score-value { font-size: 48px; font-weight: 900; color: #1a1a1a; line-height: 1; transition: transform 0.12s cubic-bezier(.36,.07,.19,.97); }
   .score-value.bump { transform: scale(1.3); }
-  .score-sep {
-    width: 3px; height: 38px;
-    background: rgba(0,0,0,0.2); border-radius: 2px;
-  }
+  .score-sep { width: 3px; height: 38px; background: rgba(0,0,0,0.2); border-radius: 2px; }
 
-  /* ── SET POPUP ── */
-  #set-popup {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    background: #f0a500; color: #1a1a1a;
-    padding: 18px 52px;
-    font-size: 38px; font-weight: 900;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-    transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
-    z-index: 100; white-space: nowrap;
-  }
+  /* SET POPUP */
+  #set-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: #f0a500; color: #1a1a1a; padding: 18px 52px; font-size: 38px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); z-index: 100; white-space: nowrap; }
   #set-popup.show { transform: translate(-50%, -50%) scale(1); }
 
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-24px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 </style>
 </head>
 <body>
 
 <div id="competition">
   <span class="comp-label" id="comp-label-el">Eccellenza FIPAV</span>
-  <span class="comp-name" id="comp-name-el">Finale 3° - 4° Posto</span>
+  <span class="comp-name"  id="comp-name-el">Finale 3° - 4° Posto</span>
+</div>
+
+<!-- SPONSOR BANNER -->
+<div id="sponsor">
+  <img id="sponsor-img" alt="Sponsor">
+  <span id="sponsor-label">Sponsor</span>
 </div>
 
 <div id="scoreboard">
   <div class="team-block home">
-    <div class="team-logo" id="home-logo">🏐</div>
+    <div class="team-logo" id="home-logo-wrap">
+      <span class="emoji">🏐</span>
+      <img id="home-logo-img" alt="">
+    </div>
     <span class="team-name" id="home-name">CASA</span>
   </div>
   <div class="sets-box">
@@ -147,18 +99,19 @@
   </div>
   <div class="team-block away">
     <span class="team-name" id="away-name">OSPITE</span>
-    <div class="team-logo" id="away-logo">🏐</div>
+    <div class="team-logo" id="away-logo-wrap">
+      <span class="emoji">🏐</span>
+      <img id="away-logo-img" alt="">
+    </div>
   </div>
 </div>
 
 <div id="set-popup">SET!</div>
 
-<!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  // ⚠️ SOSTITUISCI con la tua config Firebase (vedi istruzioni)
   const firebaseConfig = {
     apiKey: "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
     authDomain: "volley-overlay.firebaseapp.com",
@@ -171,44 +124,63 @@
 
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
-
-  let prevState = {};
+  let prev = {};
 
   function bump(id) {
     const el = document.getElementById(id);
-    el.classList.remove('bump');
-    void el.offsetWidth;
-    el.classList.add('bump');
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
     setTimeout(() => el.classList.remove('bump'), 200);
   }
 
   function showPopup(name) {
-    const popup = document.getElementById('set-popup');
-    popup.textContent = `SET — ${name}`;
-    popup.classList.add('show');
-    setTimeout(() => popup.classList.remove('show'), 2800);
+    const p = document.getElementById('set-popup');
+    p.textContent = 'SET — ' + name;
+    p.classList.add('show');
+    setTimeout(() => p.classList.remove('show'), 2800);
+  }
+
+  function applyLogo(team, url) {
+    const img = document.getElementById(team + '-logo-img');
+    const emoji = img.previousElementSibling;
+    if (url) { img.src = url; img.classList.add('visible'); emoji.style.display = 'none'; }
+    else      { img.classList.remove('visible'); emoji.style.display = 'block'; }
+  }
+
+  function applySponsor(url, label) {
+    const wrap = document.getElementById('sponsor');
+    const img  = document.getElementById('sponsor-img');
+    const lbl  = document.getElementById('sponsor-label');
+    if (url) {
+      img.src = url;
+      lbl.textContent = label || '';
+      wrap.classList.add('visible');
+    } else {
+      wrap.classList.remove('visible');
+    }
   }
 
   onValue(ref(db, 'match'), (snap) => {
     const d = snap.val();
     if (!d) return;
 
-    document.getElementById('comp-label-el').textContent = d.compLabel  || '';
-    document.getElementById('comp-name-el').textContent  = d.compName   || '';
-    document.getElementById('home-name').textContent     = (d.homeName  || 'CASA').toUpperCase();
-    document.getElementById('away-name').textContent     = (d.awayName  || 'OSPITE').toUpperCase();
+    document.getElementById('comp-label-el').textContent = d.compLabel || '';
+    document.getElementById('comp-name-el').textContent  = d.compName  || '';
+    document.getElementById('home-name').textContent = (d.homeName || 'CASA').toUpperCase();
+    document.getElementById('away-name').textContent = (d.awayName || 'OSPITE').toUpperCase();
 
-    const hs = d.homeScore ?? 0;
-    const as = d.awayScore ?? 0;
-    const hset = d.homeSets ?? 0;
-    const aset = d.awaySets ?? 0;
+    applyLogo('home', d.homeLogo || '');
+    applyLogo('away', d.awayLogo || '');
+    applySponsor(d.sponsorLogo || '', d.sponsorLabel || '');
 
-    if (hs !== prevState.homeScore) { document.getElementById('home-score').textContent = hs; if(hs > (prevState.homeScore||0)) bump('home-score'); }
-    if (as !== prevState.awayScore) { document.getElementById('away-score').textContent = as; if(as > (prevState.awayScore||0)) bump('away-score'); }
-    if (hset !== prevState.homeSets) { document.getElementById('home-sets').textContent = hset; if(hset > (prevState.homeSets||0)) showPopup((d.homeName||'CASA').toUpperCase()); }
-    if (aset !== prevState.awaySets) { document.getElementById('away-sets').textContent = aset; if(aset > (prevState.awaySets||0)) showPopup((d.awayName||'OSPITE').toUpperCase()); }
+    const hs = d.homeScore ?? 0, as2 = d.awayScore ?? 0;
+    const hset = d.homeSets ?? 0, aset = d.awaySets ?? 0;
 
-    prevState = { homeScore: hs, awayScore: as, homeSets: hset, awaySets: aset };
+    if (hs   !== prev.homeScore) { document.getElementById('home-score').textContent = hs;   if (hs   > (prev.homeScore||0)) bump('home-score'); }
+    if (as2  !== prev.awayScore) { document.getElementById('away-score').textContent = as2;  if (as2  > (prev.awayScore||0)) bump('away-score'); }
+    if (hset !== prev.homeSets)  { document.getElementById('home-sets').textContent  = hset; if (hset > (prev.homeSets||0))  showPopup((d.homeName||'CASA').toUpperCase()); }
+    if (aset !== prev.awaySets)  { document.getElementById('away-sets').textContent  = aset; if (aset > (prev.awaySets||0))  showPopup((d.awayName||'OSPITE').toUpperCase()); }
+
+    prev = { homeScore: hs, awayScore: as2, homeSets: hset, awaySets: aset };
   });
 </script>
 </body>
