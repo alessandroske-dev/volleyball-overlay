@@ -107,6 +107,7 @@
   <h1>Volley Control</h1>
   <div class="status-dot" id="status-dot"></div>
 </header>
+<div style="background:#161616;padding:6px 20px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#555;border-bottom:1px solid #1e1e1e;" id="wakelock-status">⏳ Attivazione schermo sempre attivo...</div>
 
 <!-- COMPETIZIONE -->
 <div class="section">
@@ -318,6 +319,28 @@
     ['homeScore','awayScore','homeSets','awaySets'].forEach(k => document.getElementById('val-' + k).textContent = 0);
     set(matchRef, state); toast('Reset completo');
   };
+
+  // ── WAKE LOCK: mantieni schermo attivo ──
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      document.getElementById('wakelock-status').textContent = '🟢 Schermo sempre attivo';
+      wakeLock.addEventListener('release', () => {
+        document.getElementById('wakelock-status').textContent = '🔴 Schermo può spegnersi';
+      });
+    } catch (err) {
+      document.getElementById('wakelock-status').textContent = '⚠️ Wake Lock non supportato';
+    }
+  }
+
+  // Riacquista il wake lock se la pagina torna in foreground
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+
+  requestWakeLock();
 </script>
 </body>
 </html>
