@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Volley Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --gold: #f0a500; --dark: #111; --card: #1c1c1c; --border: #2a2a2a; --text: #fff; --muted: #888; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--dark); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100dvh; padding: 0 0 40px; }
+
+  header { background: #161616; border-bottom: 3px solid var(--gold); padding: 14px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  header h1 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #444; margin-left: auto; transition: background 0.3s; }
+  .status-dot.live { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
+  .section { padding: 16px 16px 0; }
+  .section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+
+  .info-input { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; width: 100%; -webkit-appearance: none; margin-bottom: 8px; display: block; }
+  .info-input:focus { outline: none; border-color: var(--gold); }
+
+  /* SPONSOR CARD */
+  .sponsor-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    border-top: 3px solid #6366f1;
+  }
+  .sponsor-preview-wrap {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .sponsor-thumb {
+    width: 80px; height: 50px; border-radius: 8px;
+    background: #fff; border: 1px solid var(--border);
+    object-fit: contain; display: none; padding: 4px;
+  }
+  .sponsor-thumb.visible { display: block; }
+  .sponsor-ph {
+    width: 80px; height: 50px; border-radius: 8px;
+    background: #2a2a2a; border: 1px dashed #444;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; flex-shrink: 0;
+  }
+  .sponsor-toggle {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0;
+  }
+  .toggle-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .toggle-switch {
+    position: relative; width: 44px; height: 24px; flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: #333; border-radius: 24px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .toggle-slider:before {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    left: 3px; top: 3px; background: #fff; border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle-switch input:checked + .toggle-slider { background: #6366f1; }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+
+  /* TEAMS */
+  .teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+  .team-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 12px; display: flex; flex-direction: column; gap: 10px; }
+  .team-card.home { border-top: 3px solid var(--gold); }
+  .team-card.away { border-top: 3px solid #e53e3e; }
+  .team-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
+
+  .field { background: #222; border: 1px solid var(--border); color: var(--text); padding: 8px 10px; border-radius: 6px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600; width: 100%; -webkit-appearance: none; }
+  .field:focus { outline: none; border-color: var(--gold); }
+  .field.name { font-size: 15px; font-weight: 700; text-transform: uppercase; }
+
+  .logo-row { display: flex; align-items: center; gap: 8px; }
+  .logo-thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: contain; background: #2a2a2a; border: 1px solid var(--border); flex-shrink: 0; display: none; }
+  .logo-thumb.visible { display: block; }
+  .logo-ph { width: 36px; height: 36px; border-radius: 50%; background: #2a2a2a; border: 1px dashed #444; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+  .counter-row { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+  .counter-label { font-size: 11px; color: var(--muted); font-weight: 600; flex-shrink: 0; }
+  .counter-controls { display: flex; align-items: center; gap: 5px; }
+  .cnt-btn { width: 38px; height: 38px; border-radius: 8px; border: none; background: #2a2a2a; color: var(--text); font-size: 20px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.12s; font-family: 'Barlow Condensed', sans-serif; user-select: none; }
+  .cnt-btn:active { transform: scale(0.88); background: var(--gold); color: #111; }
+  .cnt-btn.minus:active { background: #e53e3e; color: #fff; }
+  .cnt-val { width: 36px; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 900; color: var(--text); }
+
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; }
+  .act-btn { padding: 16px; border-radius: 10px; border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .act-btn:active { transform: scale(0.96); }
+  .act-btn.primary { background: var(--gold); color: #111; }
+  .act-btn.danger { background: #2a1a1a; color: #e53e3e; border: 1px solid #e53e3e44; }
+  .act-btn.full { grid-column: span 2; }
+
+
+  /* TICKER CARD */
+  .ticker-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    border-top: 3px solid #f0a500;
+  }
+  textarea.field {
+    resize: none; height: 72px; line-height: 1.4;
+    font-size: 14px; font-weight: 600;
+    font-family: 'Barlow', sans-serif;
+  }
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #333; transition: transform 0.3s; white-space: nowrap; z-index: 999; }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  .divider { height: 1px; background: var(--border); margin: 16px 16px 0; }
+
+  /* LOGIN SCREEN */
+  #login-screen {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--dark);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 24px;
+  }
+  #login-screen.hidden { display: none; }
+  .login-logo { font-size: 48px; margin-bottom: 12px; }
+  .login-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px; font-weight: 900; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 4px;
+  }
+  .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 32px; }
+  .login-box {
+    width: 100%; max-width: 340px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px 20px;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+  }
+  .google-btn {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff; color: #111; border: none; border-radius: 8px;
+    padding: 13px 20px; width: 100%; cursor: pointer;
+    font-family: 'Barlow', sans-serif; font-size: 15px; font-weight: 600;
+    transition: opacity 0.15s; justify-content: center;
+  }
+  .google-btn:active { opacity: 0.8; }
+  .google-btn svg { flex-shrink: 0; }
+  .login-error {
+    font-size: 13px; color: #e53e3e; text-align: center;
+    min-height: 18px; font-weight: 600;
+  }
+
+  /* LOGOUT BUTTON */
+  #btn-logout {
+    margin-left: auto; background: transparent; border: 1px solid #333;
+    color: var(--muted); border-radius: 6px; padding: 5px 10px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+    font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; display: none;
+  }
+  #btn-logout:active { background: #2a1a1a; color: #e53e3e; border-color: #e53e3e44; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-logo">🏐</div>
+  <div class="login-title">Volley Control</div>
+  <div class="login-sub">Accedi per gestire il pannello</div>
+  <div class="login-box">
+    <button class="google-btn" id="btn-google-login">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Accedi con Google
+    </button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<header>
+  <span>🏐</span>
+  <h1>Volley Control</h1>
+  <div class="status-dot" id="status-dot"></div>
+  <button id="btn-logout">Esci</button>
+</header>
+<div style="background:#161616;padding:6px 20px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#555;border-bottom:1px solid #1e1e1e;" id="wakelock-status">⏳ Attivazione schermo sempre attivo...</div>
+
+<!-- COMPETIZIONE -->
+<div class="section">
+  <div class="section-title">Competizione</div>
+  <input class="info-input" id="inp-comp-label" placeholder="Es. Eccellenza FIPAV">
+  <input class="info-input" id="inp-comp-name"  placeholder="Es. Finale 3°-4° Posto">
+</div>
+
+<div class="divider"></div>
+
+<!-- SPONSOR -->
+<div class="section">
+  <div class="section-title">📢 Banner Sponsor</div>
+  <div class="sponsor-card">
+    <div class="sponsor-preview-wrap">
+      <div class="sponsor-ph" id="ph-sponsor">🏢</div>
+      <img class="sponsor-thumb" id="prev-sponsor" alt="anteprima sponsor">
+      <input class="field" id="inp-sponsor-logo" placeholder="URL immagine sponsor" oninput="previewSponsor()">
+    </div>
+    <input class="field" id="inp-sponsor-label" placeholder="Nome sponsor (opzionale)">
+    <div class="sponsor-toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" id="tog-sponsor" onchange="pushAll(false)">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">Mostra banner sullo stream</span>
+    </div>
+  </div>
+</div>
+
+
+<div class="divider"></div>
+
+<!-- TICKER -->
+<div class="section">
+  <div class="section-title">📰 Testo Scorrevole</div>
+  <div class="ticker-card">
+    <textarea class="field" id="inp-ticker-text" placeholder="Es. Benvenuti alla finale regionale FIPAV Brescia 2026!"></textarea>
+    <div class="sponsor-toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" id="tog-ticker" onchange="pushAll(false)">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">Mostra ticker sullo stream</span>
+    </div>
+  </div>
+</div>
+
+<!-- SQUADRE -->
+<div class="section">
+  <div class="section-title">Squadre e Punteggio</div>
+  <div class="teams-grid">
+
+    <div class="team-card home">
+      <span class="team-label">🟡 Casa</span>
+      <input class="field name" id="inp-home-name" value="" placeholder="Nome">
+      <div class="logo-row">
+        <div class="logo-ph" id="ph-home">🏐</div>
+        <img class="logo-thumb" id="prev-home" alt="">
+        <input class="field" id="inp-home-logo" placeholder="URL logo" oninput="previewLogo('home')">
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Punti</span>
+        <div class="counter-controls">
+          <button class="cnt-btn minus" ontouchstart="" onclick="change('homeScore',-1)">−</button>
+          <span class="cnt-val" id="val-homeScore">0</span>
+          <button class="cnt-btn" ontouchstart="" onclick="change('homeScore',+1)">+</button>
+        </div>
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Set</span>
+        <div class="counter-controls">
+          <button class="cnt-btn minus" ontouchstart="" onclick="change('homeSets',-1)">−</button>
+          <span class="cnt-val" id="val-homeSets">0</span>
+          <button class="cnt-btn" ontouchstart="" onclick="change('homeSets',+1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-card away">
+      <span class="team-label">🔴 Ospite</span>
+      <input class="field name" id="inp-away-name" value="" placeholder="Nome">
+      <div class="logo-row">
+        <div class="logo-ph" id="ph-away">🏐</div>
+        <img class="logo-thumb" id="prev-away" alt="">
+        <input class="field" id="inp-away-logo" placeholder="URL logo" oninput="previewLogo('away')">
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Punti</span>
+        <div class="counter-controls">
+          <button class="cnt-btn minus" ontouchstart="" onclick="change('awayScore',-1)">−</button>
+          <span class="cnt-val" id="val-awayScore">0</span>
+          <button class="cnt-btn" ontouchstart="" onclick="change('awayScore',+1)">+</button>
+        </div>
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Set</span>
+        <div class="counter-controls">
+          <button class="cnt-btn minus" ontouchstart="" onclick="change('awaySets',-1)">−</button>
+          <span class="cnt-val" id="val-awaySets">0</span>
+          <button class="cnt-btn" ontouchstart="" onclick="change('awaySets',+1)">+</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="actions">
+  <button class="act-btn primary full" onclick="pushAll()">💾 Salva tutto</button>
+  <button class="act-btn danger" onclick="resetScores()">🔄 Reset punti</button>
+  <button class="act-btn danger" onclick="resetAll()">⚠️ Reset totale</button>
+</div>
+
+<div id="toast">Salvato!</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
+    authDomain: "volley-overlay.firebaseapp.com",
+    databaseURL: "https://volley-overlay-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "volley-overlay",
+    storageBucket: "volley-overlay.firebasestorage.app",
+    messagingSenderId: "643750913822",
+    appId: "1:643750913822:web:3c1fde3fdceb6a71e3cb0f"
+  };
+
+  const app      = initializeApp(firebaseConfig);
+  const db       = getDatabase(app);
+  const auth     = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  const matchRef = ref(db, 'match');
+
+  // ── LOGIN / LOGOUT ──────────────────────────────────────────────
+  const loginScreen = document.getElementById('login-screen');
+  const btnGoogle   = document.getElementById('btn-google-login');
+  const btnLogout   = document.getElementById('btn-logout');
+  const loginError  = document.getElementById('login-error');
+
+  btnGoogle.addEventListener('click', async () => {
+    loginError.textContent = '';
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      loginError.textContent = 'Accesso annullato o non riuscito.';
+    }
+  });
+
+  btnLogout.addEventListener('click', () => signOut(auth));
+
+  // ── AUTH STATE ──────────────────────────────────────────────────
+  let dbListenerAttached = false;
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      loginScreen.classList.add('hidden');
+      btnLogout.style.display = 'block';
+      if (!dbListenerAttached) {
+        dbListenerAttached = true;
+        initApp();
+      }
+    } else {
+      loginScreen.classList.remove('hidden');
+      btnLogout.style.display = 'none';
+      document.getElementById('status-dot').classList.remove('live');
+    }
+  });
+
+  // ── LOGICA APP ──────────────────────────────────────────────────
+  function initApp() {
+    const state = {
+      compLabel: '', compName: '',
+      homeName: '', awayName: '',
+      homeLogo: '', awayLogo: '',
+      sponsorLogo: '', sponsorLabel: '', sponsorVisible: false,
+      tickerText: '', tickerVisible: false,
+      homeScore: 0, awayScore: 0, homeSets: 0, awaySets: 0
+    };
+
+    function applyLogoPreview(team, url) {
+      const img = document.getElementById('prev-' + team);
+      const ph  = document.getElementById('ph-' + team);
+      if (url) { img.src = url; img.classList.add('visible'); ph.style.display = 'none'; }
+      else      { img.classList.remove('visible'); ph.style.display = 'flex'; }
+    }
+
+    function applySponsorPreview(url) {
+      const img = document.getElementById('prev-sponsor');
+      const ph  = document.getElementById('ph-sponsor');
+      if (url) { img.src = url; img.classList.add('visible'); ph.style.display = 'none'; }
+      else      { img.classList.remove('visible'); ph.style.display = 'flex'; }
+    }
+
+    onValue(matchRef, (snap) => {
+      const d = snap.val();
+      if (!d) return;
+      Object.assign(state, d);
+      document.getElementById('inp-comp-label').value    = d.compLabel    || '';
+      document.getElementById('inp-comp-name').value     = d.compName     || '';
+      document.getElementById('inp-home-name').value     = d.homeName     || '';
+      document.getElementById('inp-away-name').value     = d.awayName     || '';
+      document.getElementById('inp-home-logo').value     = d.homeLogo     || '';
+      document.getElementById('inp-away-logo').value     = d.awayLogo     || '';
+      document.getElementById('inp-sponsor-logo').value  = d.sponsorLogo  || '';
+      document.getElementById('inp-ticker-text').value   = d.tickerText   || '';
+      document.getElementById('tog-ticker').checked      = !!d.tickerVisible;
+      document.getElementById('inp-sponsor-label').value = d.sponsorLabel || '';
+      document.getElementById('tog-sponsor').checked     = !!d.sponsorVisible;
+      applyLogoPreview('home', d.homeLogo || '');
+      applyLogoPreview('away', d.awayLogo || '');
+      applySponsorPreview(d.sponsorLogo || '');
+      ['homeScore','awayScore','homeSets','awaySets'].forEach(k => {
+        document.getElementById('val-' + k).textContent = d[k] ?? 0;
+        state[k] = d[k] ?? 0;
+      });
+      document.getElementById('status-dot').classList.add('live');
+    }, { onlyOnce: true });
+
+    function toast(msg = 'Salvato!') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1800);
+    }
+
+    window.previewLogo = function(team) {
+      applyLogoPreview(team, document.getElementById('inp-' + team + '-logo').value.trim());
+    };
+
+    window.previewSponsor = function() {
+      applySponsorPreview(document.getElementById('inp-sponsor-logo').value.trim());
+    };
+
+    window.change = function(key, delta) {
+      state[key] = Math.max(0, (state[key] || 0) + delta);
+      document.getElementById('val-' + key).textContent = state[key];
+      pushAll(false);
+    };
+
+    window.pushAll = function(showToast = true) {
+      state.compLabel      = document.getElementById('inp-comp-label').value;
+      state.compName       = document.getElementById('inp-comp-name').value;
+      state.homeName       = document.getElementById('inp-home-name').value.toUpperCase();
+      state.awayName       = document.getElementById('inp-away-name').value.toUpperCase();
+      state.homeLogo       = document.getElementById('inp-home-logo').value.trim();
+      state.awayLogo       = document.getElementById('inp-away-logo').value.trim();
+      state.sponsorLogo    = document.getElementById('inp-sponsor-logo').value.trim();
+      state.sponsorLabel   = document.getElementById('inp-sponsor-label').value.trim();
+      state.sponsorVisible = document.getElementById('tog-sponsor').checked;
+      state.tickerText     = document.getElementById('inp-ticker-text').value.trim();
+      state.tickerVisible  = document.getElementById('tog-ticker').checked;
+      set(matchRef, state);
+      if (showToast) toast('Salvato!');
+    };
+
+    window.resetScores = function() {
+      state.homeScore = 0; state.awayScore = 0;
+      ['homeScore','awayScore'].forEach(k => document.getElementById('val-' + k).textContent = 0);
+      set(matchRef, state); toast('Punti azzerati');
+    };
+
+    window.resetAll = function() {
+      if (!confirm('Azzerare tutto (punti + set)?')) return;
+      state.homeScore = 0; state.awayScore = 0; state.homeSets = 0; state.awaySets = 0;
+      ['homeScore','awayScore','homeSets','awaySets'].forEach(k => document.getElementById('val-' + k).textContent = 0);
+      set(matchRef, state); toast('Reset completo');
+    };
+  }
+
+  // ── WAKE LOCK ───────────────────────────────────────────────────
+  let wakeLock = null;
+
+  async function requestWakeLock() {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      document.getElementById('wakelock-status').textContent = '🟢 Schermo sempre attivo';
+      wakeLock.addEventListener('release', () => {
+        document.getElementById('wakelock-status').textContent = '🔴 Schermo può spegnersi';
+      });
+    } catch (err) {
+      document.getElementById('wakelock-status').textContent = '⚠️ Wake Lock non supportato';
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  });
+
+  requestWakeLock();
+</script>
+</body>
+</html>
