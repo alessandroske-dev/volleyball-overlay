@@ -109,31 +109,24 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(calc(-100% - 100vw)); }
   }
-  /* ROSTER PANNELLO CENTRALE */
-  #roster-wrap {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: none;
-    flex-direction: row;
-    gap: 12px;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-  }
-  #roster-wrap.visible { display: flex; }
-  #roster-wrap.show    { opacity: 1; }
+  /* ROSTER COLONNE LATERALI */
+  #roster-wrap { display: contents; } /* wrapper neutro, non incide sul layout */
 
   .roster-col {
-    display: flex;
+    position: absolute;
+    bottom: 40px;
+    display: none;
     flex-direction: column;
     gap: 1px;
     background: rgba(18,18,18,0.93);
     padding: 10px 18px 12px;
     filter: drop-shadow(0 4px 18px rgba(0,0,0,0.7));
-    min-width: 220px;
-    max-width: 280px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    max-width: 300px;
   }
+  .roster-col.show    { opacity: 1; }
+  .roster-col.visible { display: flex; }
 
   #roster-col-home {
     clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
@@ -545,8 +538,18 @@
     });
   }
 
+  function positionRosterCols() {
+    const sb      = document.getElementById('scoreboard');
+    const homeCol = document.getElementById('roster-col-home');
+    const awayCol = document.getElementById('roster-col-away');
+    const rect    = sb.getBoundingClientRect();
+    homeCol.style.left  = rect.left + 'px';
+    homeCol.style.right = '';
+    awayCol.style.left  = '';
+    awayCol.style.right = (1920 - rect.right) + 'px';
+  }
+
   function applyRoster(homeText, awayText, homeName, awayName, homeVisible, awayVisible) {
-    const wrap    = document.getElementById('roster-wrap');
     const homeCol = document.getElementById('roster-col-home');
     const awayCol = document.getElementById('roster-col-away');
 
@@ -555,18 +558,19 @@
     buildNames('roster-home-names', homeText);
     buildNames('roster-away-names', awayText);
 
-    // Mostra solo le colonne abilitate; il wrapper appare se almeno una è visibile
-    homeCol.style.display = homeVisible ? 'flex' : 'none';
-    awayCol.style.display = awayVisible ? 'flex' : 'none';
+    positionRosterCols();
 
-    const anyVisible = homeVisible || awayVisible;
-    if (anyVisible) {
-      wrap.classList.add('visible');
-      requestAnimationFrame(() => requestAnimationFrame(() => wrap.classList.add('show')));
-    } else {
-      wrap.classList.remove('show');
-      setTimeout(() => wrap.classList.remove('visible'), 400);
+    function toggleCol(el, visible) {
+      if (visible) {
+        el.classList.add('visible');
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+      } else {
+        el.classList.remove('show');
+        setTimeout(() => el.classList.remove('visible'), 400);
+      }
     }
+    toggleCol(homeCol, homeVisible);
+    toggleCol(awayCol, awayVisible);
   }
 
   onValue(ref(db, 'match'), (snap) => {
