@@ -320,6 +320,17 @@
 <!-- SQUADRE -->
 <div class="section">
   <div class="section-title">Squadre e Punteggio</div>
+  <button onclick="swapTeams()" style="
+    width:100%; padding:10px; border-radius:8px; border:1px solid #3a3a3a;
+    background:#2a2a2a; color:#fff; font-family:'Barlow Condensed',sans-serif;
+    font-size:14px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+    margin-bottom:10px; transition:background 0.15s;
+  " ontouchstart="" onmousedown="this.style.background='#f0a500';this.style.color='#111'"
+     onmouseup="this.style.background='#2a2a2a';this.style.color='#fff'"
+     ontouchend="this.style.background='#2a2a2a';this.style.color='#fff'">
+    ⇄ Inverti squadre
+  </button>
   <div class="teams-grid">
 
     <div class="team-card home">
@@ -549,6 +560,27 @@
       state.homeScore = 0; state.awayScore = 0;
       ['homeScore','awayScore'].forEach(k => document.getElementById('val-' + k).textContent = 0);
       set(matchRef, state); toast('Punti azzerati');
+    };
+
+    window.swapTeams = function() {
+      // Campi input
+      const fields = ['name', 'logo'];
+      fields.forEach(f => {
+        const h = document.getElementById('inp-home-' + f);
+        const a = document.getElementById('inp-away-' + f);
+        [h.value, a.value] = [a.value, h.value];
+      });
+      // Punteggi e set nello state e nel DOM
+      ['Score', 'Sets'].forEach(k => {
+        const hk = 'home' + k, ak = 'away' + k;
+        [state[hk], state[ak]] = [state[ak], state[hk]];
+        document.getElementById('val-home' + k).textContent = state[hk];
+        document.getElementById('val-away' + k).textContent = state[ak];
+      });
+      // Preview loghi
+      previewLogo('home');
+      previewLogo('away');
+      pushAll(false);
     };
 
     window.swapRosters = function() {
