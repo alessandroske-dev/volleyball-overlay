@@ -63,6 +63,7 @@
   }
   .toggle-switch input:checked + .toggle-slider { background: #6366f1; }
   .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+  #tog-roster:checked + .toggle-slider { background: #22c55e; }
 
   /* TEAMS */
   .teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
@@ -108,6 +109,32 @@
     font-size: 14px; font-weight: 600;
     font-family: 'Barlow', sans-serif;
   }
+
+  /* ROSTER CARD */
+  .roster-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    border-top: 3px solid #22c55e;
+  }
+  .roster-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  }
+  .roster-col-label-ctrl {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 4px;
+  }
+  textarea.roster-field {
+    resize: none; height: 110px; line-height: 1.4;
+    font-size: 13px; font-weight: 600;
+    font-family: 'Barlow', sans-serif;
+    background: #222; border: 1px solid var(--border);
+    color: var(--text); padding: 8px 10px; border-radius: 6px;
+    width: 100%; -webkit-appearance: none;
+  }
+  textarea.roster-field:focus { outline: none; border-color: #22c55e; }
+
   #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #333; transition: transform 0.3s; white-space: nowrap; z-index: 999; }
   #toast.show { transform: translateX(-50%) translateY(0); }
   .divider { height: 1px; background: var(--border); margin: 16px 16px 0; }
@@ -225,6 +252,33 @@
         <span class="toggle-slider"></span>
       </label>
       <span class="toggle-label">Mostra ticker sullo stream</span>
+    </div>
+  </div>
+</div>
+
+
+<div class="divider"></div>
+
+<!-- FORMAZIONI -->
+<div class="section">
+  <div class="section-title">👥 Formazioni</div>
+  <div class="roster-card">
+    <div class="roster-grid">
+      <div>
+        <div class="roster-col-label-ctrl">🟡 Casa</div>
+        <textarea class="roster-field" id="inp-roster-home" placeholder="Es:&#10;7 Rossi Anna&#10;9 Bianchi Sara&#10;12 Verdi Giulia" oninput="pushAll(false)"></textarea>
+      </div>
+      <div>
+        <div class="roster-col-label-ctrl">🔴 Ospite</div>
+        <textarea class="roster-field" id="inp-roster-away" placeholder="Es:&#10;3 Ferrari Lucia&#10;5 Marino Elena&#10;11 Greco Marta" oninput="pushAll(false)"></textarea>
+      </div>
+    </div>
+    <div class="sponsor-toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" id="tog-roster" onchange="pushAll(false)">
+        <span class="toggle-slider" style=""></span>
+      </label>
+      <span class="toggle-label">Mostra formazioni sullo stream</span>
     </div>
   </div>
 </div>
@@ -363,6 +417,7 @@
       homeLogo: '', awayLogo: '',
       sponsorLogo: '', sponsorLabel: '', sponsorVisible: false,
       tickerText: '', tickerVisible: false,
+      rosterHomeText: '', rosterAwayText: '', rosterVisible: false,
       homeScore: 0, awayScore: 0, homeSets: 0, awaySets: 0
     };
 
@@ -393,6 +448,9 @@
       document.getElementById('inp-sponsor-logo').value  = d.sponsorLogo  || '';
       document.getElementById('inp-ticker-text').value   = d.tickerText   || '';
       document.getElementById('tog-ticker').checked      = !!d.tickerVisible;
+      document.getElementById('inp-roster-home').value   = d.rosterHomeText || '';
+      document.getElementById('inp-roster-away').value   = d.rosterAwayText || '';
+      document.getElementById('tog-roster').checked      = !!d.rosterVisible;
       document.getElementById('inp-sponsor-label').value = d.sponsorLabel || '';
       document.getElementById('tog-sponsor').checked     = !!d.sponsorVisible;
       applyLogoPreview('home', d.homeLogo || '');
@@ -437,6 +495,9 @@
       state.sponsorVisible = document.getElementById('tog-sponsor').checked;
       state.tickerText     = document.getElementById('inp-ticker-text').value.trim();
       state.tickerVisible  = document.getElementById('tog-ticker').checked;
+      state.rosterHomeText = document.getElementById('inp-roster-home').value;
+      state.rosterAwayText = document.getElementById('inp-roster-away').value;
+      state.rosterVisible  = document.getElementById('tog-roster').checked;
       set(matchRef, state);
       if (showToast) toast('Salvato!');
     };

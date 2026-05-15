@@ -59,10 +59,11 @@
   #set-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: #f0a500; color: #1a1a1a; padding: 18px 52px; font-size: 38px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); z-index: 100; white-space: nowrap; }
   #set-popup.show { transform: translate(-50%, -50%) scale(1); }
 
+
   /* TICKER */
   #ticker-wrap {
     position: absolute;
-    bottom: 4px;
+    bottom: 4px; /* below scoreboard */
     left: 50%;
     transform: translateX(-50%);
     display: none;
@@ -108,6 +109,51 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(calc(-100% - 100vw)); }
   }
+  /* ROSTER BANNER */
+  #roster-banner {
+    position: absolute;
+    bottom: 122px;
+    left: 50%; transform: translateX(-50%);
+    display: none; opacity: 0;
+    flex-direction: row; align-items: stretch;
+    filter: drop-shadow(0 4px 18px rgba(0,0,0,0.7));
+    transition: opacity 0.4s ease;
+  }
+  #roster-banner.visible { display: flex; }
+  #roster-banner.show    { opacity: 1; }
+
+  .roster-col {
+    background: rgba(18,18,18,0.93);
+    padding: 8px 18px 10px;
+    min-width: 200px; max-width: 300px;
+    display: flex; flex-direction: column; gap: 1px;
+  }
+  .roster-col.home {
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
+    padding-right: 26px;
+    border-top: 3px solid #f0a500;
+  }
+  .roster-col.away {
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+    padding-left: 26px;
+    border-top: 3px solid #e53e3e;
+  }
+  .roster-divider { width: 3px; background: #f0a500; flex-shrink: 0; }
+  .roster-col-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.16em;
+    color: #777; text-transform: uppercase; margin-bottom: 4px;
+  }
+  .roster-name {
+    font-size: 14px; font-weight: 700; color: #fff;
+    letter-spacing: 0.03em; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; line-height: 1.3;
+  }
+  .roster-name .num {
+    font-size: 11px; font-weight: 900; color: #f0a500;
+    margin-right: 5px; display: inline-block;
+    min-width: 16px; text-align: right;
+  }
+
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 </style>
@@ -130,6 +176,19 @@
   <div id="ticker-tag">📢 News</div>
   <div id="ticker-track">
     <span id="ticker-text"></span>
+  </div>
+</div>
+
+<!-- ROSTER BANNER -->
+<div id="roster-banner">
+  <div class="roster-col home">
+    <div class="roster-col-label" id="roster-home-label">CASA</div>
+    <div id="roster-home-names"></div>
+  </div>
+  <div class="roster-divider"></div>
+  <div class="roster-col away">
+    <div class="roster-col-label" id="roster-away-label">OSPITE</div>
+    <div id="roster-away-names"></div>
   </div>
 </div>
 
@@ -216,30 +275,59 @@
     }
   }
 
+
   function applyTicker(text, visible) {
     const wrap  = document.getElementById('ticker-wrap');
     const span  = document.getElementById('ticker-text');
     const track = document.getElementById('ticker-track');
     if (text && visible) {
-      wrap.classList.add('visible');
       span.textContent = text;
-
-      // Reset animazione forzando reflow, altrimenti il cambio di testo
-      // non resetta il keyframe e la durata viene applicata a metà corsa
-      span.style.animation = 'none';
-      void span.offsetWidth; // forza reflow
-      span.style.animation = '';
-
+      wrap.classList.add('visible');
+      // Calcola durata in base alla larghezza reale del testo
+      // Il testo parte da destra (padding-left:100%) e scorre fino a scomparire a sinistra
       requestAnimationFrame(() => {
         const textWidth  = span.scrollWidth;
         const trackWidth = track.offsetWidth;
-        const speed      = 120; // px/s
-        const duration   = (textWidth + trackWidth) / speed;
+        // px/s: testo corto più lento, testo lungo proporzionale
+        const speed    = 120; // px al secondo
+        const duration = (textWidth + trackWidth) / speed;
         span.style.animationDuration = Math.max(5, duration) + 's';
       });
     } else {
       wrap.classList.remove('visible');
     }
+  }
+
+
+  function applyRoster(homeText, awayText, homeName, awayName, visible) {
+    const banner = document.getElementById('roster-banner');
+    if (!visible) {
+      banner.classList.remove('show');
+      setTimeout(() => banner.classList.remove('visible'), 400);
+      return;
+    }
+    function buildNames(containerId, text) {
+      const el = document.getElementById(containerId);
+      el.innerHTML = '';
+      (text || '').split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
+        const div = document.createElement('div');
+        div.className = 'roster-name';
+        // Supporta formato "7 Cognome Nome" → numero evidenziato
+        const m = line.match(/^(\d+)\s+(.+)/);
+        if (m) {
+          div.innerHTML = '<span class="num">' + m[1] + '</span>' + m[2];
+        } else {
+          div.textContent = line;
+        }
+        el.appendChild(div);
+      });
+    }
+    buildNames('roster-home-names', homeText);
+    buildNames('roster-away-names', awayText);
+    document.getElementById('roster-home-label').textContent = (homeName || 'CASA').toUpperCase();
+    document.getElementById('roster-away-label').textContent = (awayName || 'OSPITE').toUpperCase();
+    banner.classList.add('visible');
+    requestAnimationFrame(() => requestAnimationFrame(() => banner.classList.add('show')));
   }
 
   onValue(ref(db, 'match'), (snap) => {
@@ -255,6 +343,7 @@
     applyLogo('away', d.awayLogo || '');
     applySponsor(d.sponsorLogo || '', d.sponsorLabel || '', !!d.sponsorVisible);
     applyTicker(d.tickerText || '', !!d.tickerVisible);
+    applyRoster(d.rosterHomeText || '', d.rosterAwayText || '', d.homeName || '', d.awayName || '', !!d.rosterVisible);
 
     const hs = d.homeScore ?? 0, as2 = d.awayScore ?? 0;
     const hset = d.homeSets ?? 0, aset = d.awaySets ?? 0;
