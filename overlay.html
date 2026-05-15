@@ -181,12 +181,12 @@
 
 <!-- ROSTER BANNER -->
 <div id="roster-banner">
-  <div class="roster-col home">
+  <div class="roster-col home" id="roster-col-home">
     <div class="roster-col-label" id="roster-home-label">CASA</div>
     <div id="roster-home-names"></div>
   </div>
-  <div class="roster-divider"></div>
-  <div class="roster-col away">
+  <div class="roster-divider" id="roster-divider"></div>
+  <div class="roster-col away" id="roster-col-away">
     <div class="roster-col-label" id="roster-away-label">OSPITE</div>
     <div id="roster-away-names"></div>
   </div>
@@ -276,58 +276,69 @@
   }
 
 
-  function applyTicker(text, visible) {
+  function applyTicker(text1, vis1, text2, vis2) {
     const wrap  = document.getElementById('ticker-wrap');
     const span  = document.getElementById('ticker-text');
     const track = document.getElementById('ticker-track');
+    // Ticker 1 ha priorità; se entrambi attivi usa ticker1
+    const text    = vis1 ? text1 : (vis2 ? text2 : '');
+    const visible = vis1 || vis2;
     if (text && visible) {
-      span.textContent = text;
+      if (span.textContent !== text) {
+        span.textContent = text;
+        // Ricalcola durata animazione
+        span.style.animationDuration = ''; // reset
+        requestAnimationFrame(() => {
+          const speed    = 120; // px/s
+          const duration = (span.scrollWidth + track.offsetWidth) / speed;
+          span.style.animationDuration = Math.max(5, duration) + 's';
+        });
+      }
       wrap.classList.add('visible');
-      // Calcola durata in base alla larghezza reale del testo
-      // Il testo parte da destra (padding-left:100%) e scorre fino a scomparire a sinistra
-      requestAnimationFrame(() => {
-        const textWidth  = span.scrollWidth;
-        const trackWidth = track.offsetWidth;
-        // px/s: testo corto più lento, testo lungo proporzionale
-        const speed    = 120; // px al secondo
-        const duration = (textWidth + trackWidth) / speed;
-        span.style.animationDuration = Math.max(5, duration) + 's';
-      });
     } else {
       wrap.classList.remove('visible');
     }
   }
 
 
-  function applyRoster(homeText, awayText, homeName, awayName, visible) {
-    const banner = document.getElementById('roster-banner');
-    if (!visible) {
-      banner.classList.remove('show');
-      setTimeout(() => banner.classList.remove('visible'), 400);
-      return;
-    }
-    function buildNames(containerId, text) {
-      const el = document.getElementById(containerId);
-      el.innerHTML = '';
-      (text || '').split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
-        const div = document.createElement('div');
-        div.className = 'roster-name';
-        // Supporta formato "7 Cognome Nome" → numero evidenziato
-        const m = line.match(/^(\d+)\s+(.+)/);
-        if (m) {
-          div.innerHTML = '<span class="num">' + m[1] + '</span>' + m[2];
-        } else {
-          div.textContent = line;
-        }
-        el.appendChild(div);
-      });
-    }
-    buildNames('roster-home-names', homeText);
-    buildNames('roster-away-names', awayText);
+  function buildNames(containerId, text) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    (text || '').split('\n').map(l => l.trim()).filter(Boolean).forEach(line => {
+      const div = document.createElement('div');
+      div.className = 'roster-name';
+      const m = line.match(/^(\d+)\s+(.+)/);
+      if (m) div.innerHTML = '<span class="num">' + m[1] + '</span>' + m[2];
+      else    div.textContent = line;
+      el.appendChild(div);
+    });
+  }
+
+  function applyRoster(homeText, awayText, homeName, awayName, homeVisible, awayVisible) {
+    const banner   = document.getElementById('roster-banner');
+    const homeCol  = document.getElementById('roster-col-home');
+    const awayCol  = document.getElementById('roster-col-away');
+    const divider  = document.getElementById('roster-divider');
+    const anyVisible = homeVisible || awayVisible;
+
+    // Aggiorna label e nomi sempre
     document.getElementById('roster-home-label').textContent = (homeName || 'CASA').toUpperCase();
     document.getElementById('roster-away-label').textContent = (awayName || 'OSPITE').toUpperCase();
-    banner.classList.add('visible');
-    requestAnimationFrame(() => requestAnimationFrame(() => banner.classList.add('show')));
+    buildNames('roster-home-names', homeText);
+    buildNames('roster-away-names', awayText);
+
+    // Mostra/nascondi le singole colonne
+    homeCol.style.display = homeVisible ? 'flex' : 'none';
+    awayCol.style.display = awayVisible ? 'flex' : 'none';
+    divider.style.display = (homeVisible && awayVisible) ? 'block' : 'none';
+
+    if (anyVisible) {
+      banner.classList.add('visible');
+      requestAnimationFrame(() => requestAnimationFrame(() => banner.classList.add('show')));
+    } else {
+      banner.classList.remove('show');
+      setTimeout(() => banner.classList.remove('visible'), 400);
+    }
   }
 
   onValue(ref(db, 'match'), (snap) => {
@@ -342,8 +353,8 @@
     applyLogo('home', d.homeLogo || '');
     applyLogo('away', d.awayLogo || '');
     applySponsor(d.sponsorLogo || '', d.sponsorLabel || '', !!d.sponsorVisible);
-    applyTicker(d.tickerText || '', !!d.tickerVisible);
-    applyRoster(d.rosterHomeText || '', d.rosterAwayText || '', d.homeName || '', d.awayName || '', !!d.rosterVisible);
+    applyTicker(d.tickerText || '', !!d.tickerVisible, d.tickerText2 || '', !!d.tickerVisible2);
+    applyRoster(d.rosterHomeText || '', d.rosterAwayText || '', d.homeName || '', d.awayName || '', !!d.rosterHomeVisible, !!d.rosterAwayVisible);
 
     const hs = d.homeScore ?? 0, as2 = d.awayScore ?? 0;
     const hset = d.homeSets ?? 0, aset = d.awaySets ?? 0;
