@@ -59,7 +59,6 @@
   #set-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: #f0a500; color: #1a1a1a; padding: 18px 52px; font-size: 38px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); z-index: 100; white-space: nowrap; }
   #set-popup.show { transform: translate(-50%, -50%) scale(1); }
 
-
   /* TICKER */
   #ticker-wrap {
     position: absolute;
@@ -75,91 +74,52 @@
     white-space: nowrap;
   }
   #ticker-wrap.visible { display: flex; }
-
   #ticker-tag {
-    background: #f0a500;
-    color: #1a1a1a;
-    font-size: 13px; font-weight: 900;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 0 14px;
-    height: 100%; display: flex; align-items: center;
-    flex-shrink: 0;
+    background: #f0a500; color: #1a1a1a;
+    font-size: 13px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0 20px 0 14px; height: 100%; display: flex; align-items: center; flex-shrink: 0;
     clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 100%, 0 100%);
-    padding-right: 20px;
   }
-
-  #ticker-track {
-    overflow: hidden;
-    flex: 1;
-    height: 100%;
-    position: relative;
-  }
-
+  #ticker-track { overflow: hidden; flex: 1; height: 100%; position: relative; }
   #ticker-text {
-    display: inline-block;
-    white-space: nowrap;
-    font-size: 18px; font-weight: 700;
-    color: #fff; letter-spacing: 0.04em;
-    line-height: 34px;
-    padding-left: 100vw;
+    display: inline-block; white-space: nowrap;
+    font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 0.04em;
+    line-height: 34px; padding-left: 100vw;
     animation: ticker-scroll linear infinite;
   }
-
   @keyframes ticker-scroll {
     0%   { transform: translateX(0); }
     100% { transform: translateX(calc(-100% - 100vw)); }
   }
 
-  /* ROSTER COLONNE LATERALI */
+  /* ROSTER */
   #roster-wrap { display: contents; }
-
   .roster-col {
-    position: absolute;
-    bottom: 114px;
-    max-height: 820px;
-    display: none;
-    flex-direction: column;
-    gap: 1px;
-    background: rgba(18,18,18,0.93);
-    padding: 10px 18px 12px;
+    position: absolute; bottom: 114px; max-height: 820px;
+    display: none; flex-direction: column; gap: 1px;
+    background: rgba(18,18,18,0.93); padding: 10px 18px 12px;
     filter: drop-shadow(0 4px 18px rgba(0,0,0,0.7));
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    max-width: 320px;
-    overflow: hidden;
+    opacity: 0; transition: opacity 0.4s ease;
+    max-width: 320px; overflow: hidden;
   }
   .roster-col.show    { opacity: 1; }
   .roster-col.visible { display: flex; }
-
   #roster-col-home {
     clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
-    padding-right: 26px;
-    border-top: 3px solid #f0a500;
-    align-items: flex-start;
+    padding-right: 26px; border-top: 3px solid #f0a500; align-items: flex-start;
   }
   #roster-col-away {
     clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
-    padding-left: 26px;
-    border-top: 3px solid #e53e3e;
-    align-items: flex-start;
+    padding-left: 26px; border-top: 3px solid #e53e3e; align-items: flex-start;
   }
+  .roster-col-label { font-size: 9px; font-weight: 700; letter-spacing: 0.16em; color: #777; text-transform: uppercase; margin-bottom: 5px; }
+  .roster-name { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
+  .roster-name .num { font-size: 11px; font-weight: 900; color: #f0a500; margin-right: 5px; display: inline-block; min-width: 16px; text-align: right; }
 
-  .roster-col-label {
-    font-size: 9px; font-weight: 700; letter-spacing: 0.16em;
-    color: #777; text-transform: uppercase; margin-bottom: 5px;
-  }
-  .roster-name {
-    font-size: 14px; font-weight: 700; color: #fff;
-    letter-spacing: 0.03em; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis; line-height: 1.3;
-  }
-  .roster-name .num {
-    font-size: 11px; font-weight: 900; color: #f0a500;
-    margin-right: 5px; display: inline-block;
-    min-width: 16px; text-align: right;
-  }
-
-  /* ── SCOUT STATS PANEL ────────────────────────────────────────── */
+  /* ── SCOUT STATS PANEL ──────────────────────────────────────────
+     Usa visibility+opacity invece di display:none
+     così la transizione CSS funziona sempre senza race conditions
+  ──────────────────────────────────────────────────────────────── */
   #scout-panel {
     position: absolute;
     top: 50%;
@@ -170,35 +130,34 @@
     border-radius: 18px;
     padding: 28px 32px 24px;
     filter: drop-shadow(0 8px 40px rgba(0,0,0,0.85));
-    display: none;
+    display: flex;               /* sempre flex, mai nascosto con display:none */
     flex-direction: column;
     gap: 0;
     border-top: 4px solid #a855f7;
-    opacity: 0;
-    transition: opacity 0.4s ease;
     z-index: 50;
+    /* nascosto di default con visibility + opacity */
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, visibility 0s linear 0.4s;
   }
-  #scout-panel.visible { display: flex; }
-  #scout-panel.show    { opacity: 1; }
+  /* quando visibile: opacity → 1, visibility immediata (delay 0s) */
+  #scout-panel.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.4s ease, visibility 0s linear 0s;
+  }
 
   .scout-panel-header {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
+    display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;
   }
   .scout-panel-title {
     font-size: 13px; font-weight: 700; letter-spacing: 0.18em;
-    color: #a855f7; text-transform: uppercase;
-    text-align: center;
+    color: #a855f7; text-transform: uppercase; text-align: center;
   }
-  .scout-team-names {
-    display: flex; justify-content: space-between; width: 100%;
-  }
-  .scout-panel-team {
-    font-size: 22px; font-weight: 900; letter-spacing: 0.05em; color: #fff;
-    text-transform: uppercase;
-  }
+  .scout-team-names { display: flex; justify-content: space-between; width: 100%; }
+  .scout-panel-team { font-size: 22px; font-weight: 900; letter-spacing: 0.05em; color: #fff; text-transform: uppercase; }
   .scout-panel-team.home { color: #f0a500; }
   .scout-panel-team.away { color: #e53e3e; }
 
@@ -206,65 +165,34 @@
     display: grid;
     grid-template-columns: 1fr 200px 1fr;
     align-items: center;
-    gap: 10px;
-    padding: 8px 0;
+    gap: 10px; padding: 8px 0;
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
   .scout-row:last-child { border-bottom: none; }
 
-  .scout-bar-home-wrap {
-    display: flex; align-items: center; gap: 10px; justify-content: flex-end;
-  }
-  .scout-bar-away-wrap {
-    display: flex; align-items: center; gap: 10px; justify-content: flex-start;
-  }
+  .scout-bar-home-wrap { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
+  .scout-bar-away-wrap { display: flex; align-items: center; gap: 10px; justify-content: flex-start; }
 
-  .scout-num {
-    font-size: 26px; font-weight: 900; color: #fff; min-width: 30px;
-    font-family: 'Barlow Condensed', sans-serif; line-height: 1;
-  }
+  .scout-num { font-size: 26px; font-weight: 900; min-width: 30px; font-family: 'Barlow Condensed', sans-serif; line-height: 1; }
   .scout-num.home { color: #f0a500; text-align: right; }
   .scout-num.away { color: #e53e3e; text-align: left; }
 
-  .scout-bar-track {
-    height: 10px; border-radius: 5px; background: rgba(255,255,255,0.08);
-    flex: 1; overflow: hidden; position: relative;
-  }
+  .scout-bar-track { height: 10px; border-radius: 5px; background: rgba(255,255,255,0.08); flex: 1; overflow: hidden; position: relative; }
   .scout-bar-fill-home {
     position: absolute; right: 0; top: 0; height: 100%;
-    background: linear-gradient(90deg, #c77d00, #f0a500);
-    border-radius: 5px;
+    background: linear-gradient(90deg, #c77d00, #f0a500); border-radius: 5px;
     transition: width 0.6s cubic-bezier(.23,1,.32,1);
   }
   .scout-bar-fill-away {
     position: absolute; left: 0; top: 0; height: 100%;
-    background: linear-gradient(90deg, #e53e3e, #fc6868);
-    border-radius: 5px;
+    background: linear-gradient(90deg, #e53e3e, #fc6868); border-radius: 5px;
     transition: width 0.6s cubic-bezier(.23,1,.32,1);
   }
 
-  .scout-center-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .scout-stat-label {
-    text-align: center;
-    font-size: 12px; font-weight: 700; letter-spacing: 0.13em;
-    color: #666; text-transform: uppercase;
-    white-space: nowrap;
-  }
-  .scout-pct-row {
-    display: flex; justify-content: space-between; align-items: center;
-    width: 100%;
-    gap: 8px;
-  }
-  .scout-pct {
-    font-size: 13px; font-weight: 900; color: #888;
-    font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em;
-    min-width: 36px; text-align: center;
-  }
+  .scout-center-label { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .scout-stat-label { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: 0.13em; color: #666; text-transform: uppercase; white-space: nowrap; }
+  .scout-pct-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 8px; }
+  .scout-pct { font-size: 13px; font-weight: 900; font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em; min-width: 36px; text-align: center; }
   .scout-pct.home { color: #f0a500; text-align: left; }
   .scout-pct.away { color: #e53e3e; text-align: right; }
 
@@ -279,21 +207,16 @@
   <span class="comp-name"  id="comp-name-el">Finale 3° - 4° Posto</span>
 </div>
 
-<!-- SPONSOR BANNER -->
 <div id="sponsor">
   <img id="sponsor-img" alt="Sponsor">
   <span id="sponsor-label">Sponsor</span>
 </div>
 
-<!-- TICKER -->
 <div id="ticker-wrap">
   <div id="ticker-tag">📢 News</div>
-  <div id="ticker-track">
-    <span id="ticker-text"></span>
-  </div>
+  <div id="ticker-track"><span id="ticker-text"></span></div>
 </div>
 
-<!-- ROSTER PANNELLO CENTRALE -->
 <div id="roster-wrap">
   <div class="roster-col home" id="roster-col-home">
     <div class="roster-col-label" id="roster-home-label">CASA</div>
@@ -315,7 +238,6 @@
     </div>
   </div>
 
-  <!-- Ace -->
   <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-ace">0</span>
@@ -334,7 +256,6 @@
     </div>
   </div>
 
-  <!-- Errori Servizio -->
   <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-srvErr">0</span>
@@ -353,7 +274,6 @@
     </div>
   </div>
 
-  <!-- Attacchi vincenti -->
   <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-att">0</span>
@@ -372,7 +292,6 @@
     </div>
   </div>
 
-  <!-- Errori Attacco -->
   <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-attErr">0</span>
@@ -391,7 +310,6 @@
     </div>
   </div>
 
-  <!-- Muri -->
   <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-block">0</span>
@@ -410,7 +328,6 @@
     </div>
   </div>
 
-  <!-- Ricezione % -->
   <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-rec">-</span>
@@ -505,8 +422,7 @@
     const img  = document.getElementById('sponsor-img');
     const lbl  = document.getElementById('sponsor-label');
     if (url && visible) {
-      img.src = url;
-      lbl.textContent = label || '';
+      img.src = url; lbl.textContent = label || '';
       wrap.classList.add('visible');
     } else {
       wrap.classList.remove('visible');
@@ -524,8 +440,7 @@
         span.textContent = text;
         span.style.animationDuration = '';
         requestAnimationFrame(() => {
-          const speed    = 120;
-          const duration = (span.scrollWidth + track.offsetWidth) / speed;
+          const duration = (span.scrollWidth + track.offsetWidth) / 120;
           span.style.animationDuration = Math.max(5, duration) + 's';
         });
       }
@@ -560,16 +475,11 @@
   }
 
   function applyRoster(homeText, awayText, homeName, awayName, homeVisible, awayVisible) {
-    const homeCol = document.getElementById('roster-col-home');
-    const awayCol = document.getElementById('roster-col-away');
-
     document.getElementById('roster-home-label').textContent = (homeName || 'CASA').toUpperCase();
     document.getElementById('roster-away-label').textContent = (awayName || 'OSPITE').toUpperCase();
     buildNames('roster-home-names', homeText);
     buildNames('roster-away-names', awayText);
-
     positionRosterCols();
-
     function toggleCol(el, visible) {
       if (visible) {
         el.classList.add('visible');
@@ -579,8 +489,8 @@
         setTimeout(() => el.classList.remove('visible'), 400);
       }
     }
-    toggleCol(homeCol, homeVisible);
-    toggleCol(awayCol, awayVisible);
+    toggleCol(document.getElementById('roster-col-home'), homeVisible);
+    toggleCol(document.getElementById('roster-col-away'), awayVisible);
   }
 
   onValue(ref(db, 'match'), (snap) => {
@@ -605,12 +515,10 @@
 
     const hs = d.homeScore ?? 0, as2 = d.awayScore ?? 0;
     const hset = d.homeSets ?? 0, aset = d.awaySets ?? 0;
-
     if (hs   !== prev.homeScore) { document.getElementById('home-score').textContent = hs;   if (hs   > (prev.homeScore||0)) bump('home-score'); }
     if (as2  !== prev.awayScore) { document.getElementById('away-score').textContent = as2;  if (as2  > (prev.awayScore||0)) bump('away-score'); }
     if (hset !== prev.homeSets)  { document.getElementById('home-sets').textContent  = hset; if (hset > (prev.homeSets||0))  showPopup((d.homeName||'CASA').toUpperCase()); }
     if (aset !== prev.awaySets)  { document.getElementById('away-sets').textContent  = aset; if (aset > (prev.awaySets||0))  showPopup((d.awayName||'OSPITE').toUpperCase()); }
-
     prev = { homeScore: hs, awayScore: as2, homeSets: hset, awaySets: aset };
   });
 
@@ -625,7 +533,6 @@
     document.getElementById('sn-away-' + key).textContent = aVal;
     document.getElementById('sb-home-' + key).style.width = hPct + '%';
     document.getElementById('sb-away-' + key).style.width = aPct + '%';
-    // Percentuali: mostrano '-' se entrambi 0, altrimenti la percentuale reale
     document.getElementById('sp-home-' + key).textContent = total === 0 ? '-' : hPct + '%';
     document.getElementById('sp-away-' + key).textContent = total === 0 ? '-' : aPct + '%';
   }
@@ -645,22 +552,13 @@
     document.getElementById('sp-away-rec').textContent = aPct !== null ? aPct + '%' : '-';
   }
 
+  // Semplice: aggiungi/rimuovi classe .show — niente display:none, niente rAF, niente setTimeout
   function applyScout(visible) {
     const panel = document.getElementById('scout-panel');
     if (visible) {
-      panel.style.display = 'flex';
-      // doppio rAF garantisce che il browser abbia calcolato display:flex prima di avviare la transizione opacity
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          panel.classList.add('show');
-        });
-      });
+      panel.classList.add('show');
     } else {
       panel.classList.remove('show');
-      // Aspetta la transizione prima di nascondere
-      setTimeout(() => {
-        panel.style.display = 'none';
-      }, 400);
     }
   }
 
