@@ -63,7 +63,7 @@
   /* TICKER */
   #ticker-wrap {
     position: absolute;
-    bottom: 4px; /* below scoreboard */
+    bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
     display: none;
@@ -109,13 +109,13 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(calc(-100% - 100vw)); }
   }
+
   /* ROSTER COLONNE LATERALI */
   #roster-wrap { display: contents; }
 
   .roster-col {
     position: absolute;
-    /* parte dal top della scoreboard (40px margin + 74px bar) e arriva fino a 120px dal top */
-    bottom: 114px;   /* subito sopra la barra */
+    bottom: 114px;
     max-height: 820px;
     display: none;
     flex-direction: column;
@@ -176,17 +176,21 @@
     border-top: 4px solid #a855f7;
     opacity: 0;
     transition: opacity 0.4s ease;
+    z-index: 50;
   }
   #scout-panel.visible { display: flex; }
   #scout-panel.show    { opacity: 1; }
 
   .scout-panel-header {
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     margin-bottom: 20px;
   }
   .scout-panel-title {
     font-size: 13px; font-weight: 700; letter-spacing: 0.18em;
     color: #a855f7; text-transform: uppercase;
+    text-align: center;
   }
   .scout-team-names {
     display: flex; justify-content: space-between; width: 100%;
@@ -208,7 +212,6 @@
   }
   .scout-row:last-child { border-bottom: none; }
 
-  /* left: home bar (grows right→left from center) */
   .scout-bar-home-wrap {
     display: flex; align-items: center; gap: 10px; justify-content: flex-end;
   }
@@ -240,6 +243,12 @@
     transition: width 0.6s cubic-bezier(.23,1,.32,1);
   }
 
+  .scout-center-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
   .scout-stat-label {
     text-align: center;
     font-size: 12px; font-weight: 700; letter-spacing: 0.13em;
@@ -248,14 +257,16 @@
   }
   .scout-pct-row {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 1px;
+    width: 100%;
+    gap: 8px;
   }
   .scout-pct {
-    font-size: 11px; font-weight: 700; color: #888;
+    font-size: 13px; font-weight: 900; color: #888;
     font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em;
+    min-width: 36px; text-align: center;
   }
-  .scout-pct.home { color: rgba(240,165,0,0.75); }
-  .scout-pct.away { color: rgba(229,62,62,0.75); }
+  .scout-pct.home { color: #f0a500; text-align: left; }
+  .scout-pct.away { color: #e53e3e; text-align: right; }
 
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
@@ -305,17 +316,17 @@
   </div>
 
   <!-- Ace -->
-  <div class="scout-row" data-key="ace" data-label="🎯 Ace">
+  <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-ace">0</span>
       <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-ace" style="width:50%"></div></div>
     </div>
-    <div>
+    <div class="scout-center-label">
       <div class="scout-pct-row">
-        <span class="scout-pct home" id="sp-home-ace">50%</span>
-        <span class="scout-pct away" id="sp-away-ace">50%</span>
+        <span class="scout-pct home" id="sp-home-ace">-</span>
+        <span class="scout-stat-label">Ace</span>
+        <span class="scout-pct away" id="sp-away-ace">-</span>
       </div>
-      <div class="scout-stat-label">Ace</div>
     </div>
     <div class="scout-bar-away-wrap">
       <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-ace" style="width:50%"></div></div>
@@ -324,17 +335,17 @@
   </div>
 
   <!-- Errori Servizio -->
-  <div class="scout-row" data-key="srvErr" data-label="❌ Err. Servizio">
+  <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-srvErr">0</span>
       <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-srvErr" style="width:50%"></div></div>
     </div>
-    <div>
+    <div class="scout-center-label">
       <div class="scout-pct-row">
-        <span class="scout-pct home" id="sp-home-srvErr">50%</span>
-        <span class="scout-pct away" id="sp-away-srvErr">50%</span>
+        <span class="scout-pct home" id="sp-home-srvErr">-</span>
+        <span class="scout-stat-label">Err. Servizio</span>
+        <span class="scout-pct away" id="sp-away-srvErr">-</span>
       </div>
-      <div class="scout-stat-label">Err. Servizio</div>
     </div>
     <div class="scout-bar-away-wrap">
       <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-srvErr" style="width:50%"></div></div>
@@ -343,17 +354,17 @@
   </div>
 
   <!-- Attacchi vincenti -->
-  <div class="scout-row" data-key="att" data-label="⚡ Attacchi">
+  <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-att">0</span>
       <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-att" style="width:50%"></div></div>
     </div>
-    <div>
+    <div class="scout-center-label">
       <div class="scout-pct-row">
-        <span class="scout-pct home" id="sp-home-att">50%</span>
-        <span class="scout-pct away" id="sp-away-att">50%</span>
+        <span class="scout-pct home" id="sp-home-att">-</span>
+        <span class="scout-stat-label">Attacchi Vint.</span>
+        <span class="scout-pct away" id="sp-away-att">-</span>
       </div>
-      <div class="scout-stat-label">Attacchi Vint.</div>
     </div>
     <div class="scout-bar-away-wrap">
       <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-att" style="width:50%"></div></div>
@@ -362,17 +373,17 @@
   </div>
 
   <!-- Errori Attacco -->
-  <div class="scout-row" data-key="attErr" data-label="💨 Err. Attacco">
+  <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-attErr">0</span>
       <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-attErr" style="width:50%"></div></div>
     </div>
-    <div>
+    <div class="scout-center-label">
       <div class="scout-pct-row">
-        <span class="scout-pct home" id="sp-home-attErr">50%</span>
-        <span class="scout-pct away" id="sp-away-attErr">50%</span>
+        <span class="scout-pct home" id="sp-home-attErr">-</span>
+        <span class="scout-stat-label">Err. Attacco</span>
+        <span class="scout-pct away" id="sp-away-attErr">-</span>
       </div>
-      <div class="scout-stat-label">Err. Attacco</div>
     </div>
     <div class="scout-bar-away-wrap">
       <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-attErr" style="width:50%"></div></div>
@@ -381,17 +392,17 @@
   </div>
 
   <!-- Muri -->
-  <div class="scout-row" data-key="block" data-label="🧱 Muri">
+  <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-block">0</span>
       <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-block" style="width:50%"></div></div>
     </div>
-    <div>
+    <div class="scout-center-label">
       <div class="scout-pct-row">
-        <span class="scout-pct home" id="sp-home-block">50%</span>
-        <span class="scout-pct away" id="sp-away-block">50%</span>
+        <span class="scout-pct home" id="sp-home-block">-</span>
+        <span class="scout-stat-label">Muri</span>
+        <span class="scout-pct away" id="sp-away-block">-</span>
       </div>
-      <div class="scout-stat-label">Muri</div>
     </div>
     <div class="scout-bar-away-wrap">
       <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-block" style="width:50%"></div></div>
@@ -399,18 +410,18 @@
     </div>
   </div>
 
-  <!-- Ricezione % (recOk / recOk+recKo) -->
-  <div class="scout-row" data-key="rec" data-label="📥 Ricezione %">
+  <!-- Ricezione % -->
+  <div class="scout-row">
     <div class="scout-bar-home-wrap">
       <span class="scout-num home" id="sn-home-rec">-</span>
       <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-rec" style="width:50%"></div></div>
     </div>
-    <div>
+    <div class="scout-center-label">
       <div class="scout-pct-row">
         <span class="scout-pct home" id="sp-home-rec">-</span>
+        <span class="scout-stat-label">Ricezione %</span>
         <span class="scout-pct away" id="sp-away-rec">-</span>
       </div>
-      <div class="scout-stat-label">Ricezione %</div>
     </div>
     <div class="scout-bar-away-wrap">
       <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-rec" style="width:50%"></div></div>
@@ -502,21 +513,18 @@
     }
   }
 
-
   function applyTicker(text1, vis1, text2, vis2) {
     const wrap  = document.getElementById('ticker-wrap');
     const span  = document.getElementById('ticker-text');
     const track = document.getElementById('ticker-track');
-    // Ticker 1 ha priorità; se entrambi attivi usa ticker1
     const text    = vis1 ? text1 : (vis2 ? text2 : '');
     const visible = vis1 || vis2;
     if (text && visible) {
       if (span.textContent !== text) {
         span.textContent = text;
-        // Ricalcola durata animazione
-        span.style.animationDuration = ''; // reset
+        span.style.animationDuration = '';
         requestAnimationFrame(() => {
-          const speed    = 120; // px/s
+          const speed    = 120;
           const duration = (span.scrollWidth + track.offsetWidth) / speed;
           span.style.animationDuration = Math.max(5, duration) + 's';
         });
@@ -526,7 +534,6 @@
       wrap.classList.remove('visible');
     }
   }
-
 
   function buildNames(containerId, text) {
     const el = document.getElementById(containerId);
@@ -546,13 +553,8 @@
     const rect = sb.getBoundingClientRect();
     const homeCol = document.getElementById('roster-col-home');
     const awayCol = document.getElementById('roster-col-away');
-
-    // Home: bordo sinistro allineato al bordo sinistro della scoreboard
     homeCol.style.left  = rect.left + 'px';
     homeCol.style.right = 'auto';
-
-    // Away: bordo destro allineato al bordo destro della scoreboard
-    // Rendiamo visibile momentaneamente per misurare la larghezza se necessario
     awayCol.style.left  = 'auto';
     awayCol.style.right = (document.documentElement.clientWidth - rect.right) + 'px';
   }
@@ -623,6 +625,7 @@
     document.getElementById('sn-away-' + key).textContent = aVal;
     document.getElementById('sb-home-' + key).style.width = hPct + '%';
     document.getElementById('sb-away-' + key).style.width = aPct + '%';
+    // Percentuali: mostrano '-' se entrambi 0, altrimenti la percentuale reale
     document.getElementById('sp-home-' + key).textContent = total === 0 ? '-' : hPct + '%';
     document.getElementById('sp-away-' + key).textContent = total === 0 ? '-' : aPct + '%';
   }
@@ -631,7 +634,6 @@
     const hTot = hOk + hKo, aTot = aOk + aKo;
     const hPct = hTot === 0 ? null : Math.round(hOk / hTot * 100);
     const aPct = aTot === 0 ? null : Math.round(aOk / aTot * 100);
-    // Barra comparativa: percentuale di ricezione positiva
     const bothNull = hPct === null && aPct === null;
     const hBarW = bothNull ? 50 : ((hPct ?? 0) / Math.max((hPct ?? 0) + (aPct ?? 0), 1) * 100);
     const aBarW = bothNull ? 50 : 100 - hBarW;
@@ -646,11 +648,19 @@
   function applyScout(visible) {
     const panel = document.getElementById('scout-panel');
     if (visible) {
-      panel.classList.add('visible');
-      requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('show')));
+      panel.style.display = 'flex';
+      // doppio rAF garantisce che il browser abbia calcolato display:flex prima di avviare la transizione opacity
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          panel.classList.add('show');
+        });
+      });
     } else {
       panel.classList.remove('show');
-      setTimeout(() => panel.classList.remove('visible'), 400);
+      // Aspetta la transizione prima di nascondere
+      setTimeout(() => {
+        panel.style.display = 'none';
+      }, 400);
     }
   }
 
