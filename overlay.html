@@ -158,6 +158,104 @@
     min-width: 16px; text-align: right;
   }
 
+  /* ── SCOUT STATS PANEL ────────────────────────────────────────── */
+  #scout-panel {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 860px;
+    background: rgba(15,15,15,0.96);
+    border-radius: 18px;
+    padding: 28px 32px 24px;
+    filter: drop-shadow(0 8px 40px rgba(0,0,0,0.85));
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    border-top: 4px solid #a855f7;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  #scout-panel.visible { display: flex; }
+  #scout-panel.show    { opacity: 1; }
+
+  .scout-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .scout-panel-title {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.18em;
+    color: #a855f7; text-transform: uppercase;
+  }
+  .scout-team-names {
+    display: flex; justify-content: space-between; width: 100%;
+  }
+  .scout-panel-team {
+    font-size: 22px; font-weight: 900; letter-spacing: 0.05em; color: #fff;
+    text-transform: uppercase;
+  }
+  .scout-panel-team.home { color: #f0a500; }
+  .scout-panel-team.away { color: #e53e3e; }
+
+  .scout-row {
+    display: grid;
+    grid-template-columns: 1fr 200px 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .scout-row:last-child { border-bottom: none; }
+
+  /* left: home bar (grows right→left from center) */
+  .scout-bar-home-wrap {
+    display: flex; align-items: center; gap: 10px; justify-content: flex-end;
+  }
+  .scout-bar-away-wrap {
+    display: flex; align-items: center; gap: 10px; justify-content: flex-start;
+  }
+
+  .scout-num {
+    font-size: 26px; font-weight: 900; color: #fff; min-width: 30px;
+    font-family: 'Barlow Condensed', sans-serif; line-height: 1;
+  }
+  .scout-num.home { color: #f0a500; text-align: right; }
+  .scout-num.away { color: #e53e3e; text-align: left; }
+
+  .scout-bar-track {
+    height: 10px; border-radius: 5px; background: rgba(255,255,255,0.08);
+    flex: 1; overflow: hidden; position: relative;
+  }
+  .scout-bar-fill-home {
+    position: absolute; right: 0; top: 0; height: 100%;
+    background: linear-gradient(90deg, #c77d00, #f0a500);
+    border-radius: 5px;
+    transition: width 0.6s cubic-bezier(.23,1,.32,1);
+  }
+  .scout-bar-fill-away {
+    position: absolute; left: 0; top: 0; height: 100%;
+    background: linear-gradient(90deg, #e53e3e, #fc6868);
+    border-radius: 5px;
+    transition: width 0.6s cubic-bezier(.23,1,.32,1);
+  }
+
+  .scout-stat-label {
+    text-align: center;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.13em;
+    color: #666; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .scout-pct-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1px;
+  }
+  .scout-pct {
+    font-size: 11px; font-weight: 700; color: #888;
+    font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em;
+  }
+  .scout-pct.home { color: rgba(240,165,0,0.75); }
+  .scout-pct.away { color: rgba(229,62,62,0.75); }
+
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 </style>
@@ -191,6 +289,131 @@
 <div class="roster-col away" id="roster-col-away">
   <div class="roster-col-label" id="roster-away-label">OSPITE</div>
   <div id="roster-away-names"></div>
+</div>
+
+<!-- SCOUT STATS PANEL -->
+<div id="scout-panel">
+  <div class="scout-panel-header">
+    <span class="scout-panel-title">📊 Statistiche Partita</span>
+    <div class="scout-team-names">
+      <span class="scout-panel-team home" id="sp-home-name">CASA</span>
+      <span class="scout-panel-team away" id="sp-away-name">OSPITE</span>
+    </div>
+  </div>
+
+  <!-- Ace -->
+  <div class="scout-row" data-key="ace" data-label="🎯 Ace">
+    <div class="scout-bar-home-wrap">
+      <span class="scout-num home" id="sn-home-ace">0</span>
+      <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-ace" style="width:50%"></div></div>
+    </div>
+    <div>
+      <div class="scout-pct-row">
+        <span class="scout-pct home" id="sp-home-ace">50%</span>
+        <span class="scout-pct away" id="sp-away-ace">50%</span>
+      </div>
+      <div class="scout-stat-label">Ace</div>
+    </div>
+    <div class="scout-bar-away-wrap">
+      <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-ace" style="width:50%"></div></div>
+      <span class="scout-num away" id="sn-away-ace">0</span>
+    </div>
+  </div>
+
+  <!-- Errori Servizio -->
+  <div class="scout-row" data-key="srvErr" data-label="❌ Err. Servizio">
+    <div class="scout-bar-home-wrap">
+      <span class="scout-num home" id="sn-home-srvErr">0</span>
+      <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-srvErr" style="width:50%"></div></div>
+    </div>
+    <div>
+      <div class="scout-pct-row">
+        <span class="scout-pct home" id="sp-home-srvErr">50%</span>
+        <span class="scout-pct away" id="sp-away-srvErr">50%</span>
+      </div>
+      <div class="scout-stat-label">Err. Servizio</div>
+    </div>
+    <div class="scout-bar-away-wrap">
+      <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-srvErr" style="width:50%"></div></div>
+      <span class="scout-num away" id="sn-away-srvErr">0</span>
+    </div>
+  </div>
+
+  <!-- Attacchi vincenti -->
+  <div class="scout-row" data-key="att" data-label="⚡ Attacchi">
+    <div class="scout-bar-home-wrap">
+      <span class="scout-num home" id="sn-home-att">0</span>
+      <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-att" style="width:50%"></div></div>
+    </div>
+    <div>
+      <div class="scout-pct-row">
+        <span class="scout-pct home" id="sp-home-att">50%</span>
+        <span class="scout-pct away" id="sp-away-att">50%</span>
+      </div>
+      <div class="scout-stat-label">Attacchi Vint.</div>
+    </div>
+    <div class="scout-bar-away-wrap">
+      <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-att" style="width:50%"></div></div>
+      <span class="scout-num away" id="sn-away-att">0</span>
+    </div>
+  </div>
+
+  <!-- Errori Attacco -->
+  <div class="scout-row" data-key="attErr" data-label="💨 Err. Attacco">
+    <div class="scout-bar-home-wrap">
+      <span class="scout-num home" id="sn-home-attErr">0</span>
+      <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-attErr" style="width:50%"></div></div>
+    </div>
+    <div>
+      <div class="scout-pct-row">
+        <span class="scout-pct home" id="sp-home-attErr">50%</span>
+        <span class="scout-pct away" id="sp-away-attErr">50%</span>
+      </div>
+      <div class="scout-stat-label">Err. Attacco</div>
+    </div>
+    <div class="scout-bar-away-wrap">
+      <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-attErr" style="width:50%"></div></div>
+      <span class="scout-num away" id="sn-away-attErr">0</span>
+    </div>
+  </div>
+
+  <!-- Muri -->
+  <div class="scout-row" data-key="block" data-label="🧱 Muri">
+    <div class="scout-bar-home-wrap">
+      <span class="scout-num home" id="sn-home-block">0</span>
+      <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-block" style="width:50%"></div></div>
+    </div>
+    <div>
+      <div class="scout-pct-row">
+        <span class="scout-pct home" id="sp-home-block">50%</span>
+        <span class="scout-pct away" id="sp-away-block">50%</span>
+      </div>
+      <div class="scout-stat-label">Muri</div>
+    </div>
+    <div class="scout-bar-away-wrap">
+      <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-block" style="width:50%"></div></div>
+      <span class="scout-num away" id="sn-away-block">0</span>
+    </div>
+  </div>
+
+  <!-- Ricezione % (recOk / recOk+recKo) -->
+  <div class="scout-row" data-key="rec" data-label="📥 Ricezione %">
+    <div class="scout-bar-home-wrap">
+      <span class="scout-num home" id="sn-home-rec">-</span>
+      <div class="scout-bar-track"><div class="scout-bar-fill-home" id="sb-home-rec" style="width:50%"></div></div>
+    </div>
+    <div>
+      <div class="scout-pct-row">
+        <span class="scout-pct home" id="sp-home-rec">-</span>
+        <span class="scout-pct away" id="sp-away-rec">-</span>
+      </div>
+      <div class="scout-stat-label">Ricezione %</div>
+    </div>
+    <div class="scout-bar-away-wrap">
+      <div class="scout-bar-track"><div class="scout-bar-fill-away" id="sb-away-rec" style="width:50%"></div></div>
+      <span class="scout-num away" id="sn-away-rec">-</span>
+    </div>
+  </div>
 </div>
 
 <div id="scoreboard">
@@ -361,8 +584,13 @@
 
     document.getElementById('comp-label-el').textContent = d.compLabel || '';
     document.getElementById('comp-name-el').textContent  = d.compName  || '';
-    document.getElementById('home-name').textContent = (d.homeName || 'CASA').toUpperCase();
-    document.getElementById('away-name').textContent = (d.awayName || 'OSPITE').toUpperCase();
+
+    const hName = (d.homeName || 'CASA').toUpperCase();
+    const aName = (d.awayName || 'OSPITE').toUpperCase();
+    document.getElementById('home-name').textContent = hName;
+    document.getElementById('away-name').textContent = aName;
+    document.getElementById('sp-home-name').textContent = hName;
+    document.getElementById('sp-away-name').textContent = aName;
 
     applyLogo('home', d.homeLogo || '');
     applyLogo('away', d.awayLogo || '');
@@ -379,6 +607,57 @@
     if (aset !== prev.awaySets)  { document.getElementById('away-sets').textContent  = aset; if (aset > (prev.awaySets||0))  showPopup((d.awayName||'OSPITE').toUpperCase()); }
 
     prev = { homeScore: hs, awayScore: as2, homeSets: hset, awaySets: aset };
+  });
+
+  // ── SCOUT ────────────────────────────────────────────────────────
+  const SCOUT_KEYS = ['ace','srvErr','att','attErr','block'];
+
+  function updateBar(key, hVal, aVal) {
+    const total = hVal + aVal;
+    const hPct = total === 0 ? 50 : Math.round(hVal / total * 100);
+    const aPct = total === 0 ? 50 : 100 - hPct;
+    document.getElementById('sn-home-' + key).textContent = hVal;
+    document.getElementById('sn-away-' + key).textContent = aVal;
+    document.getElementById('sb-home-' + key).style.width = hPct + '%';
+    document.getElementById('sb-away-' + key).style.width = aPct + '%';
+    document.getElementById('sp-home-' + key).textContent = total === 0 ? '-' : hPct + '%';
+    document.getElementById('sp-away-' + key).textContent = total === 0 ? '-' : aPct + '%';
+  }
+
+  function updateRecBar(hOk, hKo, aOk, aKo) {
+    const hTot = hOk + hKo, aTot = aOk + aKo;
+    const hPct = hTot === 0 ? null : Math.round(hOk / hTot * 100);
+    const aPct = aTot === 0 ? null : Math.round(aOk / aTot * 100);
+    // Barra comparativa: percentuale di ricezione positiva
+    const bothNull = hPct === null && aPct === null;
+    const hBarW = bothNull ? 50 : ((hPct ?? 0) / Math.max((hPct ?? 0) + (aPct ?? 0), 1) * 100);
+    const aBarW = bothNull ? 50 : 100 - hBarW;
+    document.getElementById('sn-home-rec').textContent = hPct !== null ? hPct + '%' : '-';
+    document.getElementById('sn-away-rec').textContent = aPct !== null ? aPct + '%' : '-';
+    document.getElementById('sb-home-rec').style.width = hBarW + '%';
+    document.getElementById('sb-away-rec').style.width = aBarW + '%';
+    document.getElementById('sp-home-rec').textContent = hPct !== null ? hPct + '%' : '-';
+    document.getElementById('sp-away-rec').textContent = aPct !== null ? aPct + '%' : '-';
+  }
+
+  function applyScout(visible) {
+    const panel = document.getElementById('scout-panel');
+    if (visible) {
+      panel.classList.add('visible');
+      requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('show')));
+    } else {
+      panel.classList.remove('show');
+      setTimeout(() => panel.classList.remove('visible'), 400);
+    }
+  }
+
+  onValue(ref(db, 'scout'), (snap) => {
+    const d = snap.val();
+    if (!d) { applyScout(false); return; }
+    const h = d.home || {}, a = d.away || {};
+    SCOUT_KEYS.forEach(k => updateBar(k, h[k] ?? 0, a[k] ?? 0));
+    updateRecBar(h.recOk ?? 0, h.recKo ?? 0, a.recOk ?? 0, a.recKo ?? 0);
+    applyScout(!!d.visible);
   });
 </script>
 </body>

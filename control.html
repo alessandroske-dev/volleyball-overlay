@@ -137,6 +137,72 @@
   }
   textarea.roster-field:focus { outline: none; border-color: #22c55e; }
 
+  /* SCOUT */
+  .scout-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 12px;
+    border-top: 3px solid #a855f7;
+  }
+  .scout-teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .scout-col { display: flex; flex-direction: column; gap: 6px; }
+  .scout-col-label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
+    font-weight: 700; letter-spacing: 0.12em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 2px;
+  }
+  .scout-action-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #222; border-radius: 8px; padding: 6px 8px;
+    gap: 6px;
+  }
+  .scout-action-label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+    font-weight: 700; letter-spacing: 0.06em; color: #ccc;
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .scout-val {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 18px;
+    font-weight: 900; color: #fff; min-width: 22px; text-align: center;
+  }
+  .scout-btn-grp { display: flex; gap: 4px; }
+  .s-btn { width: 30px; height: 30px; border-radius: 6px; border: none;
+    background: #2a2a2a; color: var(--text); font-size: 16px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s; font-family: 'Barlow Condensed', sans-serif; user-select: none; }
+  .s-btn:active { transform: scale(0.86); }
+  .s-btn.plus:active  { background: #a855f7; color: #fff; }
+  .s-btn.minus:active { background: #e53e3e; color: #fff; }
+
+  .scout-overlay-toggle {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0 0;
+    border-top: 1px solid var(--border);
+  }
+  .scout-toggle-switch {
+    position: relative; width: 44px; height: 24px; flex-shrink: 0;
+  }
+  .scout-toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .scout-toggle-slider {
+    position: absolute; inset: 0; background: #333; border-radius: 24px;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .scout-toggle-slider:before {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    left: 3px; top: 3px; background: #fff; border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .scout-toggle-switch input:checked + .scout-toggle-slider { background: #a855f7; }
+  .scout-toggle-switch input:checked + .scout-toggle-slider:before { transform: translateX(20px); }
+
+  .scout-reset-btn {
+    width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #3a3a3a;
+    background: #2a2a2a; color: #e53e3e; font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .scout-reset-btn:active { background: #2a1a1a; }
+
   #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #333; transition: transform 0.3s; white-space: nowrap; z-index: 999; }
   #toast.show { transform: translateX(-50%) translateY(0); }
   .divider { height: 1px; background: var(--border); margin: 16px 16px 0; }
@@ -317,6 +383,157 @@
   </div>
 </div>
 
+<!-- SCOUT -->
+<div class="section" style="padding-top:16px;">
+  <div class="section-title">📊 Scout Partita</div>
+  <div class="scout-card">
+
+    <div class="scout-teams-grid" id="scout-grid">
+      <!-- colonna HOME -->
+      <div class="scout-col">
+        <div class="scout-col-label">🟡 Casa</div>
+        <!-- Ace -->
+        <div class="scout-action-row">
+          <span class="scout-action-label">🎯 Ace</span>
+          <span class="scout-val" id="sv-home-ace">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('home','ace',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','ace',+1)">+</button>
+          </div>
+        </div>
+        <!-- Errore Servizio -->
+        <div class="scout-action-row">
+          <span class="scout-action-label">❌ Err.Serv</span>
+          <span class="scout-val" id="sv-home-srvErr">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('home','srvErr',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','srvErr',+1)">+</button>
+          </div>
+        </div>
+        <!-- Attacco -->
+        <div class="scout-action-row">
+          <span class="scout-action-label">⚡ Attacco</span>
+          <span class="scout-val" id="sv-home-att">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('home','att',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','att',+1)">+</button>
+          </div>
+        </div>
+        <!-- Errore Attacco -->
+        <div class="scout-action-row">
+          <span class="scout-action-label">💨 Err.Att</span>
+          <span class="scout-val" id="sv-home-attErr">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('home','attErr',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','attErr',+1)">+</button>
+          </div>
+        </div>
+        <!-- Muro -->
+        <div class="scout-action-row">
+          <span class="scout-action-label">🧱 Muro</span>
+          <span class="scout-val" id="sv-home-block">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('home','block',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','block',+1)">+</button>
+          </div>
+        </div>
+        <!-- Ricezione perfetta -->
+        <div class="scout-action-row">
+          <span class="scout-action-label">✅ Ric.Ok</span>
+          <span class="scout-val" id="sv-home-recOk">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('home','recOk',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','recOk',+1)">+</button>
+          </div>
+        </div>
+        <!-- Ricezione negativa -->
+        <div class="scout-action-row">
+          <span class="scout-action-label">🔻 Ric.Ko</span>
+          <span class="scout-val" id="sv-home-recKo">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('home','recKo',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','recKo',+1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- colonna AWAY -->
+      <div class="scout-col">
+        <div class="scout-col-label">🔴 Ospite</div>
+        <div class="scout-action-row">
+          <span class="scout-action-label">🎯 Ace</span>
+          <span class="scout-val" id="sv-away-ace">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('away','ace',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('away','ace',+1)">+</button>
+          </div>
+        </div>
+        <div class="scout-action-row">
+          <span class="scout-action-label">❌ Err.Serv</span>
+          <span class="scout-val" id="sv-away-srvErr">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('away','srvErr',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('away','srvErr',+1)">+</button>
+          </div>
+        </div>
+        <div class="scout-action-row">
+          <span class="scout-action-label">⚡ Attacco</span>
+          <span class="scout-val" id="sv-away-att">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('away','att',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('away','att',+1)">+</button>
+          </div>
+        </div>
+        <div class="scout-action-row">
+          <span class="scout-action-label">💨 Err.Att</span>
+          <span class="scout-val" id="sv-away-attErr">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('away','attErr',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('away','attErr',+1)">+</button>
+          </div>
+        </div>
+        <div class="scout-action-row">
+          <span class="scout-action-label">🧱 Muro</span>
+          <span class="scout-val" id="sv-away-block">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('away','block',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('away','block',+1)">+</button>
+          </div>
+        </div>
+        <div class="scout-action-row">
+          <span class="scout-action-label">✅ Ric.Ok</span>
+          <span class="scout-val" id="sv-away-recOk">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('away','recOk',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('away','recOk',+1)">+</button>
+          </div>
+        </div>
+        <div class="scout-action-row">
+          <span class="scout-action-label">🔻 Ric.Ko</span>
+          <span class="scout-val" id="sv-away-recKo">0</span>
+          <div class="scout-btn-grp">
+            <button class="s-btn minus" ontouchstart="" onclick="scoutChange('away','recKo',-1)">−</button>
+            <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('away','recKo',+1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toggle visibilità overlay scout -->
+    <div class="scout-overlay-toggle">
+      <label class="scout-toggle-switch">
+        <input type="checkbox" id="tog-scout" onchange="scoutPush()">
+        <span class="scout-toggle-slider"></span>
+      </label>
+      <span class="toggle-label">Mostra statistiche sullo stream</span>
+    </div>
+
+    <button class="scout-reset-btn" onclick="scoutReset()">🗑 Azzera statistiche</button>
+  </div>
+</div>
+
+<div class="divider"></div>
+
 <!-- SQUADRE -->
 <div class="section">
   <div class="section-title">Squadre e Punteggio</div>
@@ -458,6 +675,55 @@
 
   // ── LOGICA APP ──────────────────────────────────────────────────
   function initApp() {
+    const scoutRef = ref(db, 'scout');
+    const SCOUT_KEYS = ['ace','srvErr','att','attErr','block','recOk','recKo'];
+
+    const scoutState = {
+      visible: false,
+      home: { ace:0, srvErr:0, att:0, attErr:0, block:0, recOk:0, recKo:0 },
+      away: { ace:0, srvErr:0, att:0, attErr:0, block:0, recOk:0, recKo:0 }
+    };
+
+    function renderScout(s) {
+      SCOUT_KEYS.forEach(k => {
+        document.getElementById('sv-home-' + k).textContent = s.home[k] ?? 0;
+        document.getElementById('sv-away-' + k).textContent = s.away[k] ?? 0;
+      });
+      document.getElementById('tog-scout').checked = !!s.visible;
+    }
+
+    onValue(scoutRef, (snap) => {
+      const d = snap.val();
+      if (!d) return;
+      if (d.home) Object.assign(scoutState.home, d.home);
+      if (d.away) Object.assign(scoutState.away, d.away);
+      scoutState.visible = !!d.visible;
+      renderScout(scoutState);
+    }, { onlyOnce: true });
+
+    window.scoutChange = function(team, key, delta) {
+      scoutState[team][key] = Math.max(0, (scoutState[team][key] || 0) + delta);
+      document.getElementById('sv-' + team + '-' + key).textContent = scoutState[team][key];
+      scoutPushInternal();
+    };
+
+    window.scoutPush = function() {
+      scoutState.visible = document.getElementById('tog-scout').checked;
+      scoutPushInternal();
+    };
+
+    function scoutPushInternal() {
+      set(scoutRef, scoutState);
+    }
+
+    window.scoutReset = function() {
+      if (!confirm('Azzerare tutte le statistiche scout?')) return;
+      SCOUT_KEYS.forEach(k => { scoutState.home[k] = 0; scoutState.away[k] = 0; });
+      renderScout(scoutState);
+      set(scoutRef, scoutState);
+      toast('Scout azzerato');
+    };
+
     const state = {
       compLabel: '', compName: '',
       homeName: '', awayName: '',
