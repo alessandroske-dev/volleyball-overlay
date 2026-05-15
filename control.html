@@ -287,6 +287,17 @@
         <textarea class="roster-field" id="inp-roster-away" placeholder="Es:&#10;3 Ferrari Lucia&#10;5 Marino Elena&#10;11 Greco Marta" oninput="pushAll(false)"></textarea>
       </div>
     </div>
+    <button onclick="swapRosters()" style="
+      width:100%; padding:10px; border-radius:8px; border:1px solid #3a3a3a;
+      background:#2a2a2a; color:#fff; font-family:'Barlow Condensed',sans-serif;
+      font-size:14px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+      cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+      transition:background 0.15s;
+    " ontouchstart="" onmousedown="this.style.background='#f0a500';this.style.color='#111'"
+       onmouseup="this.style.background='#2a2a2a';this.style.color='#fff'"
+       ontouchend="this.style.background='#2a2a2a';this.style.color='#fff'">
+      ⇄ Inverti formazioni
+    </button>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <div class="sponsor-toggle">
         <label class="toggle-switch">
@@ -538,6 +549,13 @@
       state.homeScore = 0; state.awayScore = 0;
       ['homeScore','awayScore'].forEach(k => document.getElementById('val-' + k).textContent = 0);
       set(matchRef, state); toast('Punti azzerati');
+    };
+
+    window.swapRosters = function() {
+      const h = document.getElementById('inp-roster-home');
+      const a = document.getElementById('inp-roster-away');
+      [h.value, a.value] = [a.value, h.value];
+      pushAll(false);
     };
 
     window.resetAll = function() {
