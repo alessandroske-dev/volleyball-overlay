@@ -59,11 +59,10 @@
   #set-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: #f0a500; color: #1a1a1a; padding: 18px 52px; font-size: 38px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); z-index: 100; white-space: nowrap; }
   #set-popup.show { transform: translate(-50%, -50%) scale(1); }
 
-
   /* TICKER */
   #ticker-wrap {
     position: absolute;
-    bottom: 4px; /* below scoreboard */
+    bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
     display: none;
@@ -217,22 +216,25 @@
     }
   }
 
-
   function applyTicker(text, visible) {
     const wrap  = document.getElementById('ticker-wrap');
     const span  = document.getElementById('ticker-text');
     const track = document.getElementById('ticker-track');
     if (text && visible) {
-      span.textContent = text;
       wrap.classList.add('visible');
-      // Calcola durata in base alla larghezza reale del testo
-      // Il testo parte da destra (padding-left:100%) e scorre fino a scomparire a sinistra
+      span.textContent = text;
+
+      // Reset animazione forzando reflow, altrimenti il cambio di testo
+      // non resetta il keyframe e la durata viene applicata a metà corsa
+      span.style.animation = 'none';
+      void span.offsetWidth; // forza reflow
+      span.style.animation = '';
+
       requestAnimationFrame(() => {
         const textWidth  = span.scrollWidth;
         const trackWidth = track.offsetWidth;
-        // px/s: testo corto più lento, testo lungo proporzionale
-        const speed    = 120; // px al secondo
-        const duration = (textWidth + trackWidth) / speed;
+        const speed      = 120; // px/s
+        const duration   = (textWidth + trackWidth) / speed;
         span.style.animationDuration = Math.max(5, duration) + 's';
       });
     } else {
