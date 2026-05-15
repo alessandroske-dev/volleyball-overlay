@@ -110,11 +110,13 @@
     100% { transform: translateX(calc(-100% - 100vw)); }
   }
   /* ROSTER COLONNE LATERALI */
-  #roster-wrap { display: contents; } /* wrapper neutro, non incide sul layout */
+  #roster-wrap { display: contents; }
 
   .roster-col {
     position: absolute;
-    bottom: 40px;
+    /* parte dal top della scoreboard (40px margin + 74px bar) e arriva fino a 120px dal top */
+    bottom: 114px;   /* subito sopra la barra */
+    max-height: 820px;
     display: none;
     flex-direction: column;
     gap: 1px;
@@ -123,7 +125,8 @@
     filter: drop-shadow(0 4px 18px rgba(0,0,0,0.7));
     opacity: 0;
     transition: opacity 0.4s ease;
-    max-width: 300px;
+    max-width: 320px;
+    overflow: hidden;
   }
   .roster-col.show    { opacity: 1; }
   .roster-col.visible { display: flex; }
@@ -539,14 +542,19 @@
   }
 
   function positionRosterCols() {
-    const sb      = document.getElementById('scoreboard');
+    const sb   = document.getElementById('scoreboard');
+    const rect = sb.getBoundingClientRect();
     const homeCol = document.getElementById('roster-col-home');
     const awayCol = document.getElementById('roster-col-away');
-    const rect    = sb.getBoundingClientRect();
+
+    // Home: bordo sinistro allineato al bordo sinistro della scoreboard
     homeCol.style.left  = rect.left + 'px';
-    homeCol.style.right = '';
-    awayCol.style.left  = '';
-    awayCol.style.right = (1920 - rect.right) + 'px';
+    homeCol.style.right = 'auto';
+
+    // Away: bordo destro allineato al bordo destro della scoreboard
+    // Rendiamo visibile momentaneamente per misurare la larghezza se necessario
+    awayCol.style.left  = 'auto';
+    awayCol.style.right = (document.documentElement.clientWidth - rect.right) + 'px';
   }
 
   function applyRoster(homeText, awayText, homeName, awayName, homeVisible, awayVisible) {
