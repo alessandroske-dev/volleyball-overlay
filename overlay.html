@@ -33,7 +33,7 @@
   }
 
   /* SCOREBOARD */
-  #scoreboard { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75)); overflow: visible; }
+  #scoreboard { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75)); }
 
   .team-block { display: flex; align-items: center; background: #1a1a1a; height: 74px; padding: 0 22px; gap: 14px; min-width: 260px; }
   .team-block.home { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); padding-right: 32px; }
@@ -95,26 +95,24 @@
   }
 
   /* ROSTER */
-  #roster-wrap { display: block; position: static; } /* anchor per colonne assolute in scoreboard */
+  #roster-wrap { display: contents; }
   .roster-col {
-    position: absolute; bottom: 74px; max-height: 820px;
+    position: absolute; bottom: 114px; max-height: 820px;
     display: none; flex-direction: column; gap: 1px;
     background: rgba(18,18,18,0.93); padding: 10px 18px 12px;
     filter: drop-shadow(0 4px 18px rgba(0,0,0,0.7));
     opacity: 0; transition: opacity 0.4s ease;
-    min-width: 260px; max-width: 360px; overflow: hidden;
+    max-width: 320px; overflow: hidden;
   }
   .roster-col.show    { opacity: 1; }
   .roster-col.visible { display: flex; }
   #roster-col-home {
     clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
     padding-right: 26px; border-top: 3px solid #f0a500; align-items: flex-start;
-    left: 0;
   }
   #roster-col-away {
     clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
     padding-left: 26px; border-top: 3px solid #e53e3e; align-items: flex-start;
-    right: 0;
   }
   .roster-col-label { font-size: 9px; font-weight: 700; letter-spacing: 0.16em; color: #777; text-transform: uppercase; margin-bottom: 5px; }
   .roster-name { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
@@ -198,6 +196,77 @@
   .scout-pct.home { color: #f0a500; text-align: left; }
   .scout-pct.away { color: #e53e3e; text-align: right; }
 
+
+  /* AD BANNER — centrato verticalmente, scorrevole */
+  #ad-banner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 900px;
+    height: 140px;
+    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.75);
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+    z-index: 60;
+  }
+  #ad-banner.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.5s ease, visibility 0s linear 0s;
+  }
+  #ad-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.7s cubic-bezier(.77,0,.175,1);
+    will-change: transform;
+  }
+  .ad-slide {
+    flex-shrink: 0;
+    width: 900px;
+    height: 140px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .ad-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .ad-slide .ad-placeholder {
+    font-size: 18px;
+    font-weight: 700;
+    color: #555;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  /* dots indicatori */
+  #ad-dots {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 61;
+  }
+  .ad-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transition: background 0.3s;
+  }
+  .ad-dot.active { background: #f0a500; }
+
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 </style>
@@ -217,6 +286,17 @@
 <div id="ticker-wrap">
   <div id="ticker-tag">📢 News</div>
   <div id="ticker-track"><span id="ticker-text"></span></div>
+</div>
+
+<div id="roster-wrap">
+  <div class="roster-col home" id="roster-col-home">
+    <div class="roster-col-label" id="roster-home-label">CASA</div>
+    <div id="roster-home-names"></div>
+  </div>
+  <div class="roster-col away" id="roster-col-away">
+    <div class="roster-col-label" id="roster-away-label">OSPITE</div>
+    <div id="roster-away-names"></div>
+  </div>
 </div>
 
 <!-- SCOUT STATS PANEL -->
@@ -339,16 +419,6 @@
 </div>
 
 <div id="scoreboard">
-  <div id="roster-wrap">
-    <div class="roster-col home" id="roster-col-home">
-      <div class="roster-col-label" id="roster-home-label">CASA</div>
-      <div id="roster-home-names"></div>
-    </div>
-    <div class="roster-col away" id="roster-col-away">
-      <div class="roster-col-label" id="roster-away-label">OSPITE</div>
-      <div id="roster-away-names"></div>
-    </div>
-  </div>
   <div class="team-block home">
     <div class="team-logo" id="home-logo-wrap">
       <span class="emoji">🏐</span>
@@ -379,6 +449,13 @@
 </div>
 
 <div id="set-popup">SET!</div>
+
+<div id="ad-banner">
+  <div id="ad-track"></div>
+  <div id="ad-dots"></div>
+</div>
+
+
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -479,11 +556,32 @@
     });
   }
 
+  // FIX: positionRosterCols usa 1920px fisso invece di clientWidth (viewport)
+  // e viene chiamata in requestAnimationFrame per attendere il layout finale
+  function positionRosterCols() {
+    requestAnimationFrame(() => {
+      const OVERLAY_W = 1920;
+      const sb   = document.getElementById('scoreboard');
+      const rect = sb.getBoundingClientRect();
+      const homeCol = document.getElementById('roster-col-home');
+      const awayCol = document.getElementById('roster-col-away');
+      homeCol.style.left  = rect.left + 'px';
+      homeCol.style.right = 'auto';
+      awayCol.style.left  = 'auto';
+      awayCol.style.right = (OVERLAY_W - rect.right) + 'px';
+    });
+  }
+
+  // FIX: riposiziona le colonne anche quando i loghi finiscono di caricare
+  document.getElementById('home-logo-img').addEventListener('load', positionRosterCols);
+  document.getElementById('away-logo-img').addEventListener('load', positionRosterCols);
+
   function applyRoster(homeText, awayText, homeName, awayName, homeVisible, awayVisible) {
     document.getElementById('roster-home-label').textContent = (homeName || 'CASA').toUpperCase();
     document.getElementById('roster-away-label').textContent = (awayName || 'OSPITE').toUpperCase();
     buildNames('roster-home-names', homeText);
     buildNames('roster-away-names', awayText);
+    positionRosterCols();
     function toggleCol(el, visible) {
       if (visible) {
         el.classList.add('visible');
@@ -586,6 +684,82 @@
     updateRecBar(h.recOk ?? 0, h.recKo ?? 0, a.recOk ?? 0, a.recKo ?? 0);
     applyScout(!!d.visible);
   });
+
+  // ── AD BANNER ──────────────────────────────────────────────────────────────
+  let adTimer = null;
+  let adIndex = 0;
+  let adSlides = [];
+
+  function buildAdBanner(slides) {
+    const track = document.getElementById('ad-track');
+    const dots  = document.getElementById('ad-dots');
+    track.innerHTML = '';
+    dots.innerHTML  = '';
+    adSlides = slides || [];
+    adIndex  = 0;
+
+    adSlides.forEach((slide, i) => {
+      const div = document.createElement('div');
+      div.className = 'ad-slide';
+      if (slide.url && slide.img) {
+        // immagine cliccabile (non utile in OBS, ma corretta semanticamente)
+        const img = document.createElement('img');
+        img.src = slide.img;
+        img.alt = slide.label || '';
+        div.appendChild(img);
+      } else if (slide.img) {
+        const img = document.createElement('img');
+        img.src = slide.img;
+        img.alt = slide.label || '';
+        div.appendChild(img);
+      } else {
+        const p = document.createElement('div');
+        p.className = 'ad-placeholder';
+        p.textContent = slide.label || ('Slide ' + (i + 1));
+        div.appendChild(p);
+      }
+      track.appendChild(div);
+
+      const dot = document.createElement('div');
+      dot.className = 'ad-dot' + (i === 0 ? ' active' : '');
+      dots.appendChild(dot);
+    });
+
+    goToSlide(0);
+  }
+
+  function goToSlide(idx) {
+    adIndex = idx;
+    document.getElementById('ad-track').style.transform = 'translateX(' + (-900 * idx) + 'px)';
+    document.querySelectorAll('.ad-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === idx);
+    });
+  }
+
+  function startAdCycle(intervalSec) {
+    if (adTimer) clearInterval(adTimer);
+    if (adSlides.length <= 1) return;
+    adTimer = setInterval(() => {
+      goToSlide((adIndex + 1) % adSlides.length);
+    }, (intervalSec || 5) * 1000);
+  }
+
+  function applyAdBanner(data) {
+    const banner = document.getElementById('ad-banner');
+    if (!data || !data.visible || !data.slides || data.slides.length === 0) {
+      banner.classList.remove('show');
+      if (adTimer) { clearInterval(adTimer); adTimer = null; }
+      return;
+    }
+    buildAdBanner(data.slides);
+    banner.classList.add('show');
+    startAdCycle(data.interval || 5);
+  }
+
+  onValue(ref(db, 'adBanner'), (snap) => {
+    applyAdBanner(snap.val());
+  });
+
 </script>
 </body>
 </html>
