@@ -94,10 +94,17 @@
     100% { transform: translateX(calc(-100% - 1920px)); }
   }
 
-  /* ROSTER */
+  /* ROSTER
+     Le colonne sono position:absolute nel body (1920×1080).
+     Vengono posizionate via JS una sola volta con positionRosterCols(),
+     che misura il getBoundingClientRect() dello scoreboard dopo il layout.
+     Le variabili CSS --sb-left e --sb-right vengono settate su :root.
+  */
   #roster-wrap { display: contents; }
   .roster-col {
-    position: absolute; bottom: 114px; max-height: 820px;
+    position: absolute;
+    bottom: 114px;
+    max-height: 820px;
     display: none; flex-direction: column; gap: 1px;
     background: rgba(18,18,18,0.93); padding: 10px 18px 12px;
     filter: drop-shadow(0 4px 18px rgba(0,0,0,0.7));
@@ -109,10 +116,12 @@
   #roster-col-home {
     clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
     padding-right: 26px; border-top: 3px solid #f0a500; align-items: flex-start;
+    /* posizionato via JS: left = rect.left dello scoreboard */
   }
   #roster-col-away {
     clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
     padding-left: 26px; border-top: 3px solid #e53e3e; align-items: flex-start;
+    /* posizionato via JS: right = (1920 - rect.right) dello scoreboard */
   }
   .roster-col-label { font-size: 9px; font-weight: 700; letter-spacing: 0.16em; color: #777; text-transform: uppercase; margin-bottom: 5px; }
   .roster-name { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
@@ -197,7 +206,7 @@
   .scout-pct.away { color: #e53e3e; text-align: right; }
 
 
-  /* AD BANNER — centrato verticalmente, scorrevole */
+  /* AD BANNER — centrato a metà schermo, carosello scorrevole */
   #ad-banner {
     position: absolute;
     top: 50%;
@@ -215,56 +224,29 @@
     z-index: 60;
   }
   #ad-banner.show {
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
+    visibility: visible; opacity: 1; pointer-events: auto;
     transition: opacity 0.5s ease, visibility 0s linear 0s;
   }
   #ad-track {
-    display: flex;
-    height: 100%;
+    display: flex; height: 100%;
     transition: transform 0.7s cubic-bezier(.77,0,.175,1);
     will-change: transform;
   }
   .ad-slide {
-    flex-shrink: 0;
-    width: 900px;
-    height: 140px;
-    background: #1a1a1a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    cursor: pointer;
+    flex-shrink: 0; width: 900px; height: 140px;
+    background: #111;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
   }
-  .ad-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-  }
+  .ad-slide img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .ad-slide .ad-placeholder {
-    font-size: 18px;
-    font-weight: 700;
-    color: #555;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 18px; font-weight: 700; color: #555;
+    letter-spacing: 0.08em; text-transform: uppercase;
   }
-  /* dots indicatori */
   #ad-dots {
-    position: absolute;
-    bottom: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 6px;
-    z-index: 61;
+    position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; z-index: 61;
   }
-  .ad-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: rgba(255,255,255,0.3);
-    transition: background 0.3s;
-  }
+  .ad-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: background 0.3s; }
   .ad-dot.active { background: #f0a500; }
 
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
@@ -456,7 +438,6 @@
 </div>
 
 
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -556,25 +537,36 @@
     });
   }
 
-  // FIX: positionRosterCols usa 1920px fisso invece di clientWidth (viewport)
-  // e viene chiamata in requestAnimationFrame per attendere il layout finale
+
+  // FIX: riposiziona le colonne anche quando i loghi finiscono di caricare
+
+
+  // ── ROSTER POSITIONING ────────────────────────────────────────────────────
+  // Misura lo scoreboard e posiziona le colonne nel body (1920px coords).
+  // Usato dopo ogni cambio di logo (che può cambiare la larghezza dello sb).
   function positionRosterCols() {
     requestAnimationFrame(() => {
-      const OVERLAY_W = 1920;
       const sb   = document.getElementById('scoreboard');
       const rect = sb.getBoundingClientRect();
-      const homeCol = document.getElementById('roster-col-home');
-      const awayCol = document.getElementById('roster-col-away');
-      homeCol.style.left  = rect.left + 'px';
-      homeCol.style.right = 'auto';
-      awayCol.style.left  = 'auto';
-      awayCol.style.right = (OVERLAY_W - rect.right) + 'px';
+      // Il body è sempre 1920×1080 — le coordinate BoundingClientRect
+      // corrispondono esattamente ai px CSS del body quando OBS usa
+      // "width=1920" nel browser source (che è il caso standard).
+      // Per sicurezza usiamo la scala reale: rapporto tra offsetWidth e rect.width.
+      const scale = document.body.offsetWidth / 1920; // normalmente 1
+      const left  = rect.left  / scale;
+      const right = rect.right / scale;
+      document.getElementById('roster-col-home').style.left  = left + 'px';
+      document.getElementById('roster-col-home').style.right = 'auto';
+      document.getElementById('roster-col-away').style.left  = 'auto';
+      document.getElementById('roster-col-away').style.right = (1920 - right) + 'px';
     });
   }
 
-  // FIX: riposiziona le colonne anche quando i loghi finiscono di caricare
+  // Riposiziona quando i loghi cambiano dimensione (possono allargare il sb)
   document.getElementById('home-logo-img').addEventListener('load', positionRosterCols);
   document.getElementById('away-logo-img').addEventListener('load', positionRosterCols);
+  // Posizionamento iniziale
+  positionRosterCols();
 
   function applyRoster(homeText, awayText, homeName, awayName, homeVisible, awayVisible) {
     document.getElementById('roster-home-label').textContent = (homeName || 'CASA').toUpperCase();
@@ -685,7 +677,7 @@
     applyScout(!!d.visible);
   });
 
-  // ── AD BANNER ──────────────────────────────────────────────────────────────
+  // ── AD BANNER CAROSELLO ────────────────────────────────────────────────────
   let adTimer = null;
   let adIndex = 0;
   let adSlides = [];
@@ -697,17 +689,10 @@
     dots.innerHTML  = '';
     adSlides = slides || [];
     adIndex  = 0;
-
     adSlides.forEach((slide, i) => {
       const div = document.createElement('div');
       div.className = 'ad-slide';
-      if (slide.url && slide.img) {
-        // immagine cliccabile (non utile in OBS, ma corretta semanticamente)
-        const img = document.createElement('img');
-        img.src = slide.img;
-        img.alt = slide.label || '';
-        div.appendChild(img);
-      } else if (slide.img) {
+      if (slide.img) {
         const img = document.createElement('img');
         img.src = slide.img;
         img.alt = slide.label || '';
@@ -719,29 +704,23 @@
         div.appendChild(p);
       }
       track.appendChild(div);
-
       const dot = document.createElement('div');
       dot.className = 'ad-dot' + (i === 0 ? ' active' : '');
       dots.appendChild(dot);
     });
-
     goToSlide(0);
   }
 
   function goToSlide(idx) {
     adIndex = idx;
     document.getElementById('ad-track').style.transform = 'translateX(' + (-900 * idx) + 'px)';
-    document.querySelectorAll('.ad-dot').forEach((d, i) => {
-      d.classList.toggle('active', i === idx);
-    });
+    document.querySelectorAll('.ad-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
   }
 
   function startAdCycle(intervalSec) {
     if (adTimer) clearInterval(adTimer);
     if (adSlides.length <= 1) return;
-    adTimer = setInterval(() => {
-      goToSlide((adIndex + 1) % adSlides.length);
-    }, (intervalSec || 5) * 1000);
+    adTimer = setInterval(() => goToSlide((adIndex + 1) % adSlides.length), (intervalSec || 5) * 1000);
   }
 
   function applyAdBanner(data) {
@@ -756,9 +735,7 @@
     startAdCycle(data.interval || 5);
   }
 
-  onValue(ref(db, 'adBanner'), (snap) => {
-    applyAdBanner(snap.val());
-  });
+  onValue(ref(db, 'adBanner'), (snap) => { applyAdBanner(snap.val()); });
 
 </script>
 </body>
