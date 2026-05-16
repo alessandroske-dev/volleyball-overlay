@@ -33,7 +33,7 @@
   }
 
   /* SCOREBOARD */
-  #scoreboard { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75)); }
+  #scoreboard { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75)); overflow: visible; }
 
   .team-block { display: flex; align-items: center; background: #1a1a1a; height: 74px; padding: 0 22px; gap: 14px; min-width: 260px; }
   .team-block.home { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); padding-right: 32px; }
@@ -95,25 +95,26 @@
   }
 
   /* ROSTER */
-  #roster-wrap { display: contents; }
+  #roster-wrap { display: block; position: static; } /* anchor per colonne assolute in scoreboard */
   .roster-col {
-    position: absolute; bottom: 114px; max-height: 820px;
+    position: absolute; bottom: 74px; max-height: 820px;
     display: none; flex-direction: column; gap: 1px;
     background: rgba(18,18,18,0.93); padding: 10px 18px 12px;
     filter: drop-shadow(0 4px 18px rgba(0,0,0,0.7));
     opacity: 0; transition: opacity 0.4s ease;
-    max-width: 320px; overflow: hidden;
+    min-width: 260px; max-width: 360px; overflow: hidden;
   }
   .roster-col.show    { opacity: 1; }
   .roster-col.visible { display: flex; }
   #roster-col-home {
     clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 0 100%);
     padding-right: 26px; border-top: 3px solid #f0a500; align-items: flex-start;
+    left: 0;
   }
   #roster-col-away {
     clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
     padding-left: 26px; border-top: 3px solid #e53e3e; align-items: flex-start;
-    width: 320px;
+    right: 0;
   }
   .roster-col-label { font-size: 9px; font-weight: 700; letter-spacing: 0.16em; color: #777; text-transform: uppercase; margin-bottom: 5px; }
   .roster-name { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
@@ -216,17 +217,6 @@
 <div id="ticker-wrap">
   <div id="ticker-tag">📢 News</div>
   <div id="ticker-track"><span id="ticker-text"></span></div>
-</div>
-
-<div id="roster-wrap">
-  <div class="roster-col home" id="roster-col-home">
-    <div class="roster-col-label" id="roster-home-label">CASA</div>
-    <div id="roster-home-names"></div>
-  </div>
-  <div class="roster-col away" id="roster-col-away">
-    <div class="roster-col-label" id="roster-away-label">OSPITE</div>
-    <div id="roster-away-names"></div>
-  </div>
 </div>
 
 <!-- SCOUT STATS PANEL -->
@@ -349,6 +339,16 @@
 </div>
 
 <div id="scoreboard">
+  <div id="roster-wrap">
+    <div class="roster-col home" id="roster-col-home">
+      <div class="roster-col-label" id="roster-home-label">CASA</div>
+      <div id="roster-home-names"></div>
+    </div>
+    <div class="roster-col away" id="roster-col-away">
+      <div class="roster-col-label" id="roster-away-label">OSPITE</div>
+      <div id="roster-away-names"></div>
+    </div>
+  </div>
   <div class="team-block home">
     <div class="team-logo" id="home-logo-wrap">
       <span class="emoji">🏐</span>
@@ -479,31 +479,11 @@
     });
   }
 
-  // La colonna away ha width CSS fissa (320px) — niente misurazioni a runtime.
-  const AWAY_COL_W = 320;
-  function positionRosterCols() {
-    requestAnimationFrame(() => {
-      const sb   = document.getElementById('scoreboard');
-      const rect = sb.getBoundingClientRect();
-      const homeCol = document.getElementById('roster-col-home');
-      const awayCol = document.getElementById('roster-col-away');
-      homeCol.style.left  = rect.left + 'px';
-      homeCol.style.right = 'auto';
-      awayCol.style.right = 'auto';
-      awayCol.style.left  = (rect.right - AWAY_COL_W) + 'px';
-    });
-  }
-
-  // FIX: riposiziona le colonne anche quando i loghi finiscono di caricare
-  document.getElementById('home-logo-img').addEventListener('load', positionRosterCols);
-  document.getElementById('away-logo-img').addEventListener('load', positionRosterCols);
-
   function applyRoster(homeText, awayText, homeName, awayName, homeVisible, awayVisible) {
     document.getElementById('roster-home-label').textContent = (homeName || 'CASA').toUpperCase();
     document.getElementById('roster-away-label').textContent = (awayName || 'OSPITE').toUpperCase();
     buildNames('roster-home-names', homeText);
     buildNames('roster-away-names', awayText);
-    positionRosterCols();
     function toggleCol(el, visible) {
       if (visible) {
         el.classList.add('visible');
