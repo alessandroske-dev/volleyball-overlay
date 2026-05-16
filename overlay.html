@@ -59,7 +59,9 @@
   #set-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: #f0a500; color: #1a1a1a; padding: 18px 52px; font-size: 38px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%); transition: transform 0.3s cubic-bezier(.34,1.56,.64,1); z-index: 100; white-space: nowrap; }
   #set-popup.show { transform: translate(-50%, -50%) scale(1); }
 
-  /* TICKER */
+  /* TICKER
+     FIX: usa 1920px esplicito invece di 100vw — il body è fisso 1920px
+     e la viewport del browser OBS potrebbe non coincidere con vw */
   #ticker-wrap {
     position: absolute;
     bottom: 4px;
@@ -84,12 +86,12 @@
   #ticker-text {
     display: inline-block; white-space: nowrap;
     font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 0.04em;
-    line-height: 34px; padding-left: 100vw;
+    line-height: 34px; padding-left: 1920px;
     animation: ticker-scroll linear infinite;
   }
   @keyframes ticker-scroll {
     0%   { transform: translateX(0); }
-    100% { transform: translateX(calc(-100% - 100vw)); }
+    100% { transform: translateX(calc(-100% - 1920px)); }
   }
 
   /* ROSTER */
@@ -130,18 +132,16 @@
     border-radius: 18px;
     padding: 28px 32px 24px;
     filter: drop-shadow(0 8px 40px rgba(0,0,0,0.85));
-    display: flex;               /* sempre flex, mai nascosto con display:none */
+    display: flex;
     flex-direction: column;
     gap: 0;
     border-top: 4px solid #a855f7;
     z-index: 50;
-    /* nascosto di default con visibility + opacity */
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.4s ease, visibility 0s linear 0.4s;
   }
-  /* quando visibile: opacity → 1, visibility immediata (delay 0s) */
   #scout-panel.show {
     visibility: visible;
     opacity: 1;
@@ -397,17 +397,32 @@
   const db  = getDatabase(app);
   let prev = {};
 
+  // FIX: gestione popup concorrenti — una sola istanza alla volta con coda
+  let popupTimer = null;
+  let popupQueue = [];
+
+  function drainPopupQueue() {
+    if (popupQueue.length === 0) return;
+    const name = popupQueue.shift();
+    const p = document.getElementById('set-popup');
+    p.textContent = 'SET — ' + name;
+    p.classList.add('show');
+    popupTimer = setTimeout(() => {
+      p.classList.remove('show');
+      popupTimer = null;
+      setTimeout(drainPopupQueue, 350);
+    }, 2800);
+  }
+
+  function showPopup(name) {
+    popupQueue.push(name);
+    if (!popupTimer) drainPopupQueue();
+  }
+
   function bump(id) {
     const el = document.getElementById(id);
     el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
     setTimeout(() => el.classList.remove('bump'), 200);
-  }
-
-  function showPopup(name) {
-    const p = document.getElementById('set-popup');
-    p.textContent = 'SET — ' + name;
-    p.classList.add('show');
-    setTimeout(() => p.classList.remove('show'), 2800);
   }
 
   function applyLogo(team, url) {
@@ -440,7 +455,7 @@
         span.textContent = text;
         span.style.animationDuration = '';
         requestAnimationFrame(() => {
-          const duration = (span.scrollWidth + track.offsetWidth) / 120;
+          const duration = (span.scrollWidth + 1920) / 120;
           span.style.animationDuration = Math.max(5, duration) + 's';
         });
       }
@@ -463,16 +478,25 @@
     });
   }
 
+  // FIX: positionRosterCols usa 1920px fisso invece di clientWidth (viewport)
+  // e viene chiamata in requestAnimationFrame per attendere il layout finale
   function positionRosterCols() {
-    const sb   = document.getElementById('scoreboard');
-    const rect = sb.getBoundingClientRect();
-    const homeCol = document.getElementById('roster-col-home');
-    const awayCol = document.getElementById('roster-col-away');
-    homeCol.style.left  = rect.left + 'px';
-    homeCol.style.right = 'auto';
-    awayCol.style.left  = 'auto';
-    awayCol.style.right = (document.documentElement.clientWidth - rect.right) + 'px';
+    requestAnimationFrame(() => {
+      const OVERLAY_W = 1920;
+      const sb   = document.getElementById('scoreboard');
+      const rect = sb.getBoundingClientRect();
+      const homeCol = document.getElementById('roster-col-home');
+      const awayCol = document.getElementById('roster-col-away');
+      homeCol.style.left  = rect.left + 'px';
+      homeCol.style.right = 'auto';
+      awayCol.style.left  = 'auto';
+      awayCol.style.right = (OVERLAY_W - rect.right) + 'px';
+    });
   }
+
+  // FIX: riposiziona le colonne anche quando i loghi finiscono di caricare
+  document.getElementById('home-logo-img').addEventListener('load', positionRosterCols);
+  document.getElementById('away-logo-img').addEventListener('load', positionRosterCols);
 
   function applyRoster(homeText, awayText, homeName, awayName, homeVisible, awayVisible) {
     document.getElementById('roster-home-label').textContent = (homeName || 'CASA').toUpperCase();
@@ -513,13 +537,29 @@
     applyTicker(d.tickerText || '', !!d.tickerVisible, d.tickerText2 || '', !!d.tickerVisible2);
     applyRoster(d.rosterHomeText || '', d.rosterAwayText || '', d.homeName || '', d.awayName || '', !!d.rosterHomeVisible, !!d.rosterAwayVisible);
 
-    const hs = d.homeScore ?? 0, as2 = d.awayScore ?? 0;
-    const hset = d.homeSets ?? 0, aset = d.awaySets ?? 0;
-    if (hs   !== prev.homeScore) { document.getElementById('home-score').textContent = hs;   if (hs   > (prev.homeScore||0)) bump('home-score'); }
-    if (as2  !== prev.awayScore) { document.getElementById('away-score').textContent = as2;  if (as2  > (prev.awayScore||0)) bump('away-score'); }
-    if (hset !== prev.homeSets)  { document.getElementById('home-sets').textContent  = hset; if (hset > (prev.homeSets||0))  showPopup((d.homeName||'CASA').toUpperCase()); }
-    if (aset !== prev.awaySets)  { document.getElementById('away-sets').textContent  = aset; if (aset > (prev.awaySets||0))  showPopup((d.awayName||'OSPITE').toUpperCase()); }
-    prev = { homeScore: hs, awayScore: as2, homeSets: hset, awaySets: aset };
+    // FIX: rinominata as2 → awayScore per leggibilità
+    const homeScore = d.homeScore ?? 0;
+    const awayScore = d.awayScore ?? 0;
+    const hset = d.homeSets ?? 0;
+    const aset = d.awaySets ?? 0;
+
+    if (homeScore !== prev.homeScore) {
+      document.getElementById('home-score').textContent = homeScore;
+      if (homeScore > (prev.homeScore || 0)) bump('home-score');
+    }
+    if (awayScore !== prev.awayScore) {
+      document.getElementById('away-score').textContent = awayScore;
+      if (awayScore > (prev.awayScore || 0)) bump('away-score');
+    }
+    if (hset !== prev.homeSets) {
+      document.getElementById('home-sets').textContent = hset;
+      if (hset > (prev.homeSets || 0)) showPopup((d.homeName || 'CASA').toUpperCase());
+    }
+    if (aset !== prev.awaySets) {
+      document.getElementById('away-sets').textContent = aset;
+      if (aset > (prev.awaySets || 0)) showPopup((d.awayName || 'OSPITE').toUpperCase());
+    }
+    prev = { homeScore, awayScore, homeSets: hset, awaySets: aset };
   });
 
   // ── SCOUT ────────────────────────────────────────────────────────
@@ -552,14 +592,10 @@
     document.getElementById('sp-away-rec').textContent = aPct !== null ? aPct + '%' : '-';
   }
 
-  // Semplice: aggiungi/rimuovi classe .show — niente display:none, niente rAF, niente setTimeout
   function applyScout(visible) {
     const panel = document.getElementById('scout-panel');
-    if (visible) {
-      panel.classList.add('show');
-    } else {
-      panel.classList.remove('show');
-    }
+    if (visible) panel.classList.add('show');
+    else panel.classList.remove('show');
   }
 
   onValue(ref(db, 'scout'), (snap) => {

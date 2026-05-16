@@ -61,10 +61,14 @@
     left: 3px; top: 3px; background: #fff; border-radius: 50%;
     transition: transform 0.2s;
   }
+  /* FIX: tutti i toggle usano la stessa regola generica — rimosso selettore
+     #tog-ticker-2 hardcoded e unificato con la classe .toggle-switch */
   .toggle-switch input:checked + .toggle-slider { background: #6366f1; }
   .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+  /* Toggle specifici che usano colori diversi — mantenuti come override semantici */
+  #tog-ticker:checked + .toggle-slider,
   #tog-ticker-2:checked + .toggle-slider { background: #f0a500; }
-  #tog-roster-home:checked + .toggle-slider { background: #22c55e; }
+  #tog-roster-home:checked + .toggle-slider,
   #tog-roster-away:checked + .toggle-slider { background: #22c55e; }
 
   /* TEAMS */
@@ -97,7 +101,6 @@
   .act-btn.primary { background: var(--gold); color: #111; }
   .act-btn.danger { background: #2a1a1a; color: #e53e3e; border: 1px solid #e53e3e44; }
   .act-btn.full { grid-column: span 2; }
-
 
   /* TICKER CARD */
   .ticker-card {
@@ -306,7 +309,6 @@
   </div>
 </div>
 
-
 <div class="divider"></div>
 
 <!-- TICKER -->
@@ -335,7 +337,6 @@
     </div>
   </div>
 </div>
-
 
 <div class="divider"></div>
 
@@ -392,7 +393,6 @@
       <!-- colonna HOME -->
       <div class="scout-col">
         <div class="scout-col-label">🟡 Casa</div>
-        <!-- Ace -->
         <div class="scout-action-row">
           <span class="scout-action-label">🎯 Ace</span>
           <span class="scout-val" id="sv-home-ace">0</span>
@@ -401,7 +401,6 @@
             <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','ace',+1)">+</button>
           </div>
         </div>
-        <!-- Errore Servizio -->
         <div class="scout-action-row">
           <span class="scout-action-label">❌ Err.Serv</span>
           <span class="scout-val" id="sv-home-srvErr">0</span>
@@ -410,7 +409,6 @@
             <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','srvErr',+1)">+</button>
           </div>
         </div>
-        <!-- Attacco -->
         <div class="scout-action-row">
           <span class="scout-action-label">⚡ Attacco</span>
           <span class="scout-val" id="sv-home-att">0</span>
@@ -419,7 +417,6 @@
             <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','att',+1)">+</button>
           </div>
         </div>
-        <!-- Errore Attacco -->
         <div class="scout-action-row">
           <span class="scout-action-label">💨 Err.Att</span>
           <span class="scout-val" id="sv-home-attErr">0</span>
@@ -428,7 +425,6 @@
             <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','attErr',+1)">+</button>
           </div>
         </div>
-        <!-- Muro -->
         <div class="scout-action-row">
           <span class="scout-action-label">🧱 Muro</span>
           <span class="scout-val" id="sv-home-block">0</span>
@@ -437,7 +433,6 @@
             <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','block',+1)">+</button>
           </div>
         </div>
-        <!-- Ricezione perfetta -->
         <div class="scout-action-row">
           <span class="scout-action-label">✅ Ric.Ok</span>
           <span class="scout-val" id="sv-home-recOk">0</span>
@@ -446,7 +441,6 @@
             <button class="s-btn plus"  ontouchstart="" onclick="scoutChange('home','recOk',+1)">+</button>
           </div>
         </div>
-        <!-- Ricezione negativa -->
         <div class="scout-action-row">
           <span class="scout-action-label">🔻 Ric.Ko</span>
           <span class="scout-val" id="sv-home-recKo">0</span>
@@ -519,7 +513,6 @@
       </div>
     </div>
 
-    <!-- Toggle visibilità overlay scout -->
     <div class="scout-overlay-toggle">
       <label class="scout-toggle-switch">
         <input type="checkbox" id="tog-scout" onchange="scoutPush()">
@@ -612,7 +605,8 @@
 <div class="actions">
   <button class="act-btn primary full" onclick="pushAll()">💾 Salva tutto</button>
   <button class="act-btn danger" onclick="resetScores()">🔄 Reset punti</button>
-  <button class="act-btn danger" onclick="resetAll()">⚠️ Reset totale</button>
+  <!-- FIX: rinominato resetAll → resetMatch per chiarire che resetta solo punti+set -->
+  <button class="act-btn danger" onclick="resetMatch()">⚠️ Reset partita</button>
 </div>
 
 <div id="toast">Salvato!</div>
@@ -653,9 +647,19 @@
     }
   });
 
-  btnLogout.addEventListener('click', () => signOut(auth));
+  // FIX: rilascia il Wake Lock al logout
+  btnLogout.addEventListener('click', async () => {
+    if (wakeLock) {
+      try { await wakeLock.release(); } catch (_) {}
+      wakeLock = null;
+    }
+    signOut(auth);
+  });
 
   // ── AUTH STATE ──────────────────────────────────────────────────
+  // Nota: onValue con { onlyOnce: true } è intenzionale — il control legge
+  // lo stato iniziale una volta sola per evitare loop di sovrascrittura.
+  // In scenari multi-device, le modifiche remote non vengono sincronizzate.
   let dbListenerAttached = false;
 
   onAuthStateChanged(auth, (user) => {
@@ -828,21 +832,31 @@
       set(matchRef, state); toast('Punti azzerati');
     };
 
+    // FIX: swapTeams ora include anche roster e scout stats
     window.swapTeams = function() {
-      // Campi input
-      const fields = ['name', 'logo'];
-      fields.forEach(f => {
+      // Nomi e loghi
+      ['name', 'logo'].forEach(f => {
         const h = document.getElementById('inp-home-' + f);
         const a = document.getElementById('inp-away-' + f);
         [h.value, a.value] = [a.value, h.value];
       });
-      // Punteggi e set nello state e nel DOM
+      // Punteggi e set
       ['Score', 'Sets'].forEach(k => {
         const hk = 'home' + k, ak = 'away' + k;
         [state[hk], state[ak]] = [state[ak], state[hk]];
         document.getElementById('val-home' + k).textContent = state[hk];
         document.getElementById('val-away' + k).textContent = state[ak];
       });
+      // FIX: swap roster
+      const rh = document.getElementById('inp-roster-home');
+      const ra = document.getElementById('inp-roster-away');
+      [rh.value, ra.value] = [ra.value, rh.value];
+      // FIX: swap scout stats in memoria e su Firebase
+      const tmpScout = { ...scoutState.home };
+      Object.assign(scoutState.home, scoutState.away);
+      Object.assign(scoutState.away, tmpScout);
+      renderScout(scoutState);
+      set(ref(db, 'scout'), scoutState);
       // Preview loghi
       previewLogo('home');
       previewLogo('away');
@@ -856,8 +870,9 @@
       pushAll(false);
     };
 
-    window.resetAll = function() {
-      if (!confirm('Azzerare tutto (punti + set)?')) return;
+    // FIX: rinominata resetAll → resetMatch — resetta solo punti+set, non l'intera partita
+    window.resetMatch = function() {
+      if (!confirm('Azzerare punti e set?')) return;
       state.homeScore = 0; state.awayScore = 0; state.homeSets = 0; state.awaySets = 0;
       ['homeScore','awayScore','homeSets','awaySets'].forEach(k => document.getElementById('val-' + k).textContent = 0);
       set(matchRef, state); toast('Reset completo');
