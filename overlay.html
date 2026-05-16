@@ -478,19 +478,35 @@
     });
   }
 
-  // FIX: positionRosterCols usa 1920px fisso invece di clientWidth (viewport)
-  // e viene chiamata in requestAnimationFrame per attendere il layout finale
+  // FIX: positionRosterCols usa left per entrambe le colonne.
+  // La colonna away viene posizionata con left = rect.right - larghezza colonna,
+  // così funziona anche se OBS scala la viewport o la colonna non è ancora visibile.
   function positionRosterCols() {
     requestAnimationFrame(() => {
-      const OVERLAY_W = 1920;
       const sb   = document.getElementById('scoreboard');
       const rect = sb.getBoundingClientRect();
       const homeCol = document.getElementById('roster-col-home');
       const awayCol = document.getElementById('roster-col-away');
+
+      // Colonna casa: allineata al bordo sinistro dello scoreboard
       homeCol.style.left  = rect.left + 'px';
       homeCol.style.right = 'auto';
-      awayCol.style.left  = 'auto';
-      awayCol.style.right = (OVERLAY_W - rect.right) + 'px';
+
+      // Colonna ospite: rendiamo temporaneamente visibile per misurare la larghezza
+      const wasHidden = !awayCol.classList.contains('visible');
+      if (wasHidden) {
+        awayCol.style.visibility = 'hidden';
+        awayCol.style.display = 'flex';
+      }
+      const awayW = awayCol.offsetWidth;
+      if (wasHidden) {
+        awayCol.style.display = '';
+        awayCol.style.visibility = '';
+      }
+
+      // Posiziona con left in modo che il bordo destro combaci con rect.right
+      awayCol.style.right = 'auto';
+      awayCol.style.left  = (rect.right - awayW) + 'px';
     });
   }
 
