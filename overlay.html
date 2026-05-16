@@ -113,6 +113,7 @@
   #roster-col-away {
     clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
     padding-left: 26px; border-top: 3px solid #e53e3e; align-items: flex-start;
+    width: 320px;
   }
   .roster-col-label { font-size: 9px; font-weight: 700; letter-spacing: 0.16em; color: #777; text-transform: uppercase; margin-bottom: 5px; }
   .roster-name { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; }
@@ -478,35 +479,18 @@
     });
   }
 
-  // FIX: positionRosterCols usa left per entrambe le colonne.
-  // La colonna away viene posizionata con left = rect.right - larghezza colonna,
-  // così funziona anche se OBS scala la viewport o la colonna non è ancora visibile.
+  // La colonna away ha width CSS fissa (320px) — niente misurazioni a runtime.
+  const AWAY_COL_W = 320;
   function positionRosterCols() {
     requestAnimationFrame(() => {
       const sb   = document.getElementById('scoreboard');
       const rect = sb.getBoundingClientRect();
       const homeCol = document.getElementById('roster-col-home');
       const awayCol = document.getElementById('roster-col-away');
-
-      // Colonna casa: allineata al bordo sinistro dello scoreboard
       homeCol.style.left  = rect.left + 'px';
       homeCol.style.right = 'auto';
-
-      // Colonna ospite: rendiamo temporaneamente visibile per misurare la larghezza
-      const wasHidden = !awayCol.classList.contains('visible');
-      if (wasHidden) {
-        awayCol.style.visibility = 'hidden';
-        awayCol.style.display = 'flex';
-      }
-      const awayW = awayCol.offsetWidth;
-      if (wasHidden) {
-        awayCol.style.display = '';
-        awayCol.style.visibility = '';
-      }
-
-      // Posiziona con left in modo che il bordo destro combaci con rect.right
       awayCol.style.right = 'auto';
-      awayCol.style.left  = (rect.right - awayW) + 'px';
+      awayCol.style.left  = (rect.right - AWAY_COL_W) + 'px';
     });
   }
 
