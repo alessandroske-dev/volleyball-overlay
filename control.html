@@ -219,7 +219,6 @@
     background: #222; border: 1px solid var(--border);
     border-radius: 8px; padding: 10px 12px;
     display: flex; flex-direction: column; gap: 6px;
-    position: relative;
   }
   .ad-slide-header {
     display: flex; align-items: center; justify-content: space-between;
@@ -233,12 +232,9 @@
     width: 24px; height: 24px; border-radius: 6px; border: none;
     background: #2a1a1a; color: #e53e3e; font-size: 14px;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all 0.12s;
   }
   .ad-remove-btn:active { background: #e53e3e; color: #fff; }
-  .ad-thumb-row {
-    display: flex; align-items: center; gap: 8px;
-  }
+  .ad-thumb-row { display: flex; align-items: center; gap: 8px; }
   .ad-thumb {
     width: 72px; height: 44px; border-radius: 6px;
     background: #fff; border: 1px solid #333;
@@ -251,12 +247,8 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 20px; flex-shrink: 0;
   }
-  .ad-interval-row {
-    display: flex; align-items: center; gap: 8px;
-  }
-  .ad-interval-label {
-    font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap;
-  }
+  .ad-interval-row { display: flex; align-items: center; gap: 8px; }
+  .ad-interval-label { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
   .ad-interval-input {
     width: 60px; background: #222; border: 1px solid var(--border);
     color: var(--text); padding: 6px 8px; border-radius: 6px;
@@ -678,6 +670,29 @@
 
 <div id="toast">Salvato!</div>
 
+
+<div class="divider"></div>
+
+<!-- AD BANNER -->
+<div class="section" style="padding-top:16px;">
+  <div class="section-title">📺 Banner Pubblicitario</div>
+  <div class="ad-banner-card">
+    <div class="ad-interval-row" style="justify-content:space-between;">
+      <span class="ad-interval-label">Durata slide (secondi)</span>
+      <input class="ad-interval-input" id="ad-interval" type="number" min="2" max="60" value="5">
+    </div>
+    <div id="ad-slides-list"></div>
+    <button class="ad-add-btn" onclick="adAddSlide()">+ Aggiungi slide</button>
+    <div class="sponsor-toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" id="tog-ad-banner" onchange="pushAdBanner()">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">Mostra banner sullo stream</span>
+    </div>
+  </div>
+</div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -944,78 +959,87 @@
       ['homeScore','awayScore','homeSets','awaySets'].forEach(k => document.getElementById('val-' + k).textContent = 0);
       set(matchRef, state); toast('Reset completo');
     };
-
-  // ── AD BANNER ──────────────────────────────────────────────────────────────
-  let adSlides = [];
-
-  function adRenderList() {
-    const list = document.getElementById('ad-slides-list');
-    list.innerHTML = '';
-    adSlides.forEach((slide, i) => {
-      const item = document.createElement('div');
-      item.className = 'ad-slide-item';
-      item.innerHTML =
-        '<div class="ad-slide-header">' +
-          '<span class="ad-slide-num">Slide ' + (i+1) + '</span>' +
-          '<button class="ad-remove-btn" onclick="adRemoveSlide(' + i + ')">✕</button>' +
-        '</div>' +
-        '<div class="ad-thumb-row">' +
-          '<div class="ad-thumb-ph" id="ad-ph-' + i + '">🖼️</div>' +
-          '<img class="ad-thumb' + (slide.img ? ' visible' : '') + '" id="ad-thumb-' + i + '" src="' + (slide.img||'') + '" alt="">' +
-          '<input class="field" style="flex:1;" placeholder="URL immagine" value="' + (slide.img||'') + '" oninput="adUpdateSlide(' + i + ','img',this.value)">' +
-        '</div>' +
-        '<input class="field" placeholder="Link URL (opzionale)" value="' + (slide.url||'') + '" oninput="adUpdateSlide(' + i + ','url',this.value)">' +
-        '<input class="field" placeholder="Etichetta testo (opzionale)" value="' + (slide.label||'') + '" oninput="adUpdateSlide(' + i + ','label',this.value)">';
-      list.appendChild(item);
-      const ph = document.getElementById('ad-ph-' + i);
-      const th = document.getElementById('ad-thumb-' + i);
-      if (slide.img) { ph.style.display='none'; th.classList.add('visible'); }
-      else           { ph.style.display='flex';  th.classList.remove('visible'); }
-    });
   }
 
-  window.adAddSlide = function() {
-    adSlides.push({ img: '', url: '', label: '' });
-    adRenderList();
-    pushAdBanner();
-  };
+    // ── AD BANNER ──────────────────────────────────────────────────────────
+    let adSlides = [];
 
-  window.adRemoveSlide = function(i) {
-    adSlides.splice(i, 1);
-    adRenderList();
-    pushAdBanner();
-  };
-
-  window.adUpdateSlide = function(i, key, val) {
-    adSlides[i][key] = val.trim();
-    if (key === 'img') {
-      const ph = document.getElementById('ad-ph-' + i);
-      const th = document.getElementById('ad-thumb-' + i);
-      if (val.trim()) { th.src = val.trim(); th.classList.add('visible'); ph.style.display='none'; }
-      else            { th.classList.remove('visible'); ph.style.display='flex'; }
+    function adRenderList() {
+      const list = document.getElementById('ad-slides-list');
+      list.innerHTML = '';
+      adSlides.forEach(function(slide, i) {
+        const item = document.createElement('div');
+        item.className = 'ad-slide-item';
+        // Uso concatenazione con escape corretto per evitare quote conflicts
+        const imgVal   = (slide.img   || '').replace(/"/g, '&quot;');
+        const urlVal   = (slide.url   || '').replace(/"/g, '&quot;');
+        const labelVal = (slide.label || '').replace(/"/g, '&quot;');
+        item.innerHTML =
+          '<div class="ad-slide-header">' +
+            '<span class="ad-slide-num">Slide ' + (i+1) + '</span>' +
+            '<button class="ad-remove-btn" onclick="adRemoveSlide(' + i + ')">✕</button>' +
+          '</div>' +
+          '<div class="ad-thumb-row">' +
+            '<div class="ad-thumb-ph" id="ad-ph-' + i + '">🖼️</div>' +
+            '<img class="ad-thumb' + (slide.img ? ' visible' : '') + '" id="ad-thumb-' + i + '" src="' + imgVal + '" alt="">' +
+            '<input class="field" style="flex:1;" placeholder="URL immagine" value="' + imgVal + '" data-idx="' + i + '" data-key="img" oninput="adUpdateSlide(this)">' +
+          '</div>' +
+          '<input class="field" placeholder="Link cliccabile (opzionale)" value="' + urlVal + '" data-idx="' + i + '" data-key="url" oninput="adUpdateSlide(this)">' +
+          '<input class="field" placeholder="Etichetta testo (opzionale)" value="' + labelVal + '" data-idx="' + i + '" data-key="label" oninput="adUpdateSlide(this)">';
+        list.appendChild(item);
+        const ph = document.getElementById('ad-ph-' + i);
+        const th = document.getElementById('ad-thumb-' + i);
+        if (slide.img) { ph.style.display = 'none'; th.classList.add('visible'); }
+        else           { ph.style.display = 'flex';  th.classList.remove('visible'); }
+      });
     }
-    pushAdBanner();
-  };
 
-  window.pushAdBanner = function() {
-    const interval = parseInt(document.getElementById('ad-interval').value) || 5;
-    const visible  = document.getElementById('tog-ad-banner').checked;
-    const payload  = { visible, interval, slides: adSlides.filter(s => s.img || s.label) };
-    set(ref(db, 'adBanner'), payload);
-  };
+    window.adAddSlide = function() {
+      adSlides.push({ img: '', url: '', label: '' });
+      adRenderList();
+      pushAdBanner();
+    };
 
-  // Leggi stato iniziale adBanner
-  onValue(ref(db, 'adBanner'), (snap) => {
-    const d = snap.val();
-    if (!d) return;
-    document.getElementById('tog-ad-banner').checked = !!d.visible;
-    document.getElementById('ad-interval').value = d.interval || 5;
-    adSlides = (d.slides || []).map(s => ({ img: s.img||'', url: s.url||'', label: s.label||'' }));
-    adRenderList();
-  }, { onlyOnce: true });
+    window.adRemoveSlide = function(i) {
+      adSlides.splice(i, 1);
+      adRenderList();
+      pushAdBanner();
+    };
 
-  // Aggiorna banner quando cambia interval
-  document.getElementById('ad-interval').addEventListener('change', pushAdBanner);
+    window.adUpdateSlide = function(input) {
+      const i   = parseInt(input.dataset.idx);
+      const key = input.dataset.key;
+      const val = input.value.trim();
+      adSlides[i][key] = val;
+      if (key === 'img') {
+        const ph = document.getElementById('ad-ph-' + i);
+        const th = document.getElementById('ad-thumb-' + i);
+        if (val) { th.src = val; th.classList.add('visible'); ph.style.display = 'none'; }
+        else     { th.classList.remove('visible'); ph.style.display = 'flex'; }
+      }
+      pushAdBanner();
+    };
+
+    window.pushAdBanner = function() {
+      const interval = parseInt(document.getElementById('ad-interval').value) || 5;
+      const visible  = document.getElementById('tog-ad-banner').checked;
+      const payload  = { visible, interval, slides: adSlides.filter(function(s) { return s.img || s.label; }) };
+      set(ref(db, 'adBanner'), payload);
+    };
+
+    // Leggi stato iniziale adBanner da Firebase (onlyOnce)
+    onValue(ref(db, 'adBanner'), function(snap) {
+      const d = snap.val();
+      if (!d) return;
+      document.getElementById('tog-ad-banner').checked  = !!d.visible;
+      document.getElementById('ad-interval').value      = d.interval || 5;
+      adSlides = (d.slides || []).map(function(s) {
+        return { img: s.img || '', url: s.url || '', label: s.label || '' };
+      });
+      adRenderList();
+    }, { onlyOnce: true });
+
+    document.getElementById('ad-interval').addEventListener('change', pushAdBanner);
 
 
   // ── WAKE LOCK ───────────────────────────────────────────────────
@@ -1039,32 +1063,5 @@
 
   requestWakeLock();
 </script>
-<div class="divider"></div>
-
-<!-- AD BANNER -->
-<div class="section" style="padding-top:16px;">
-  <div class="section-title">📺 Banner Pubblicitario</div>
-  <div class="ad-banner-card">
-
-    <div class="ad-interval-row" style="justify-content:space-between;">
-      <span class="ad-interval-label">Durata slide (secondi)</span>
-      <input class="ad-interval-input" id="ad-interval" type="number" min="2" max="60" value="5">
-    </div>
-
-    <div id="ad-slides-list"></div>
-
-    <button class="ad-add-btn" onclick="adAddSlide()">+ Aggiungi slide</button>
-
-    <div class="sponsor-toggle">
-      <label class="toggle-switch">
-        <input type="checkbox" id="tog-ad-banner" onchange="pushAdBanner()">
-        <span class="toggle-slider" style=""></span>
-      </label>
-      <span class="toggle-label">Mostra banner sullo stream</span>
-    </div>
-  </div>
-</div>
-
-
 </body>
 </html>
