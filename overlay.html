@@ -67,6 +67,8 @@
     bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
+    /* FIX: width esplicita — in OBS browser source 100vw può non coincidere con il body 1920px */
+    width: 1920px;
     display: none;
     align-items: center;
     background: #1a1a1a;
@@ -87,7 +89,10 @@
     display: inline-block; white-space: nowrap;
     font-size: 18px; font-weight: 700; color: #fff; letter-spacing: 0.04em;
     line-height: 34px; padding-left: 1920px;
+    /* FIX: animation-duration parte a 0s — viene impostata via JS dopo il primo scrollWidth.
+       Senza questo, la prima chiamata a applyTicker parte con la durata di default del browser */
     animation: ticker-scroll linear infinite;
+    animation-duration: 0s;
   }
   @keyframes ticker-scroll {
     0%   { transform: translateX(0); }
@@ -422,13 +427,16 @@
 
   function bump(id) {
     const el = document.getElementById(id);
+    if (!el) return; // FIX: guard null — evita crash silenzioso su ID errato
     el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
     setTimeout(() => el.classList.remove('bump'), 200);
   }
 
   function applyLogo(team, url) {
-    const img = document.getElementById(team + '-logo-img');
-    const emoji = img.previousElementSibling;
+    const img   = document.getElementById(team + '-logo-img');
+    // FIX: querySelector relativo al parent invece di previousElementSibling
+    // (fragile se l'ordine dei tag nel DOM cambia)
+    const emoji = img.closest('.team-logo').querySelector('.emoji');
     if (url) { img.src = url; img.classList.add('visible'); emoji.style.display = 'none'; }
     else      { img.classList.remove('visible'); emoji.style.display = 'block'; }
   }
@@ -446,15 +454,21 @@
   }
 
   function applyTicker(text1, vis1, text2, vis2) {
-    const wrap  = document.getElementById('ticker-wrap');
-    const span  = document.getElementById('ticker-text');
-    const track = document.getElementById('ticker-track');
+    const wrap = document.getElementById('ticker-wrap');
+    // FIX: rimossa variabile 'track' orfana (dichiarata ma mai usata)
     const text    = vis1 ? text1 : (vis2 ? text2 : '');
     const visible = vis1 || vis2;
     if (text && visible) {
+      let span = document.getElementById('ticker-text');
       if (span.textContent !== text) {
         span.textContent = text;
-        span.style.animationDuration = '';
+        // FIX: cloneNode per reset animazione affidabile (void offsetWidth non basta se
+        // l'animazione è già in corso; il clone forza il browser a creare nuova istanza)
+        const clone = span.cloneNode(true);
+        span.parentNode.replaceChild(clone, span);
+        span = clone;
+        // FIX: animation-duration calcolata e applicata subito nel primo frame disponibile
+        // (prima di questa fix, la prima chiamata partiva senza duration → durata 0)
         requestAnimationFrame(() => {
           const duration = (span.scrollWidth + 1920) / 120;
           span.style.animationDuration = Math.max(5, duration) + 's';
@@ -473,8 +487,17 @@
       const div = document.createElement('div');
       div.className = 'roster-name';
       const m = line.match(/^(\d+)\s+(.+)/);
-      if (m) div.innerHTML = '<span class="num">' + m[1] + '</span>' + m[2];
-      else    div.textContent = line;
+      if (m) {
+        // FIX: usa textContent per le parti di testo — evita XSS da dati Firebase
+        const numSpan = document.createElement('span');
+        numSpan.className = 'num';
+        numSpan.textContent = m[1];
+        const nameNode = document.createTextNode(m[2]);
+        div.appendChild(numSpan);
+        div.appendChild(nameNode);
+      } else {
+        div.textContent = line;
+      }
       el.appendChild(div);
     });
   }

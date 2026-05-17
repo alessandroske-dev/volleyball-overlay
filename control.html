@@ -347,11 +347,11 @@
     <div class="roster-grid">
       <div>
         <div class="roster-col-label-ctrl">🟡 Casa</div>
-        <textarea class="roster-field" id="inp-roster-home" placeholder="Es:&#10;7 Rossi Anna&#10;9 Bianchi Sara&#10;12 Verdi Giulia" oninput="pushAll(false)"></textarea>
+        <textarea class="roster-field" id="inp-roster-home" placeholder="Es:&#10;7 Rossi Anna&#10;9 Bianchi Sara&#10;12 Verdi Giulia" oninput="pushAllDebounced()"></textarea>
       </div>
       <div>
         <div class="roster-col-label-ctrl">🔴 Ospite</div>
-        <textarea class="roster-field" id="inp-roster-away" placeholder="Es:&#10;3 Ferrari Lucia&#10;5 Marino Elena&#10;11 Greco Marta" oninput="pushAll(false)"></textarea>
+        <textarea class="roster-field" id="inp-roster-away" placeholder="Es:&#10;3 Ferrari Lucia&#10;5 Marino Elena&#10;11 Greco Marta" oninput="pushAllDebounced()"></textarea>
       </div>
     </div>
     <button onclick="swapRosters()" style="
@@ -647,12 +647,13 @@
     }
   });
 
-  // FIX: rilascia il Wake Lock al logout
+  // FIX: rilascia il Wake Lock al logout e azzera status-dot esplicitamente
   btnLogout.addEventListener('click', async () => {
     if (wakeLock) {
       try { await wakeLock.release(); } catch (_) {}
       wakeLock = null;
     }
+    document.getElementById('status-dot').classList.remove('live');
     signOut(auth);
   });
 
@@ -678,6 +679,13 @@
   });
 
   // ── LOGICA APP ──────────────────────────────────────────────────
+  // FIX: debounce per oninput roster — evita write Firebase a ogni singolo carattere digitato
+  let rosterDebounceTimer = null;
+  window.pushAllDebounced = function() {
+    clearTimeout(rosterDebounceTimer);
+    rosterDebounceTimer = setTimeout(() => window.pushAll(false), 600);
+  };
+
   function initApp() {
     const scoutRef = ref(db, 'scout');
     const SCOUT_KEYS = ['ace','srvErr','att','attErr','block','recOk','recKo'];
@@ -785,9 +793,7 @@
     }, { onlyOnce: true });
 
     function toast(msg = 'Salvato!') {
-      const t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 1800);
+      window.toast(msg);
     }
 
     window.previewLogo = function(team) {
@@ -832,7 +838,7 @@
       set(matchRef, state); toast('Punti azzerati');
     };
 
-    // FIX: swapTeams ora include anche roster e scout stats
+    // swapTeams: scambia nomi, loghi, punteggi, set e scout — NON il roster (ha bottone dedicato)
     window.swapTeams = function() {
       // Nomi e loghi
       ['name', 'logo'].forEach(f => {
@@ -847,11 +853,8 @@
         document.getElementById('val-home' + k).textContent = state[hk];
         document.getElementById('val-away' + k).textContent = state[ak];
       });
-      // FIX: swap roster
-      const rh = document.getElementById('inp-roster-home');
-      const ra = document.getElementById('inp-roster-away');
-      [rh.value, ra.value] = [ra.value, rh.value];
       // FIX: swap scout stats in memoria e su Firebase
+      // NOTA: il roster NON viene swappato qui — usa il bottone "Inverti formazioni" dedicato
       const tmpScout = { ...scoutState.home };
       Object.assign(scoutState.home, scoutState.away);
       Object.assign(scoutState.away, tmpScout);
@@ -880,6 +883,7 @@
   }
 
   // ── WAKE LOCK ───────────────────────────────────────────────────
+  // Consolidato dentro il modulo ES per evitare dipendenza da scope globale
   let wakeLock = null;
 
   async function requestWakeLock() {
@@ -899,6 +903,13 @@
   });
 
   requestWakeLock();
+
+  // Espone toast globalmente per sicurezza (chiamabile da HTML inline se necessario)
+  window.toast = function(msg = 'Salvato!') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1800);
+  };
 </script>
 </body>
 </html>
