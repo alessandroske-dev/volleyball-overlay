@@ -205,6 +205,63 @@
 
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+  /* AD BANNER */
+  #ad-banner {
+    position: absolute;
+    bottom: 125px; /* sopra la scoreboard (74px) + ticker (34px) + gap */
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(15,15,15,0.96);
+    border-radius: 14px;
+    border-left: 4px solid #ec4899;
+    padding: 14px 22px 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 680px;
+    min-width: 320px;
+    filter: drop-shadow(0 6px 32px rgba(0,0,0,0.8));
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0.4s;
+  }
+  #ad-banner.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0s;
+  }
+  #ad-banner-img {
+    width: 80px; height: 56px; border-radius: 8px;
+    object-fit: contain; background: #fff;
+    padding: 4px; flex-shrink: 0; display: none;
+  }
+  #ad-banner-img.visible { display: block; }
+  .ad-banner-body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+  .ad-banner-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+    color: #ec4899; text-transform: uppercase;
+  }
+  .ad-banner-title {
+    font-size: 22px; font-weight: 900; color: #fff;
+    letter-spacing: 0.04em; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .ad-banner-text {
+    font-size: 14px; font-weight: 400; color: #aaa;
+    letter-spacing: 0.02em; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+  .ad-banner-link {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 4px;
+    background: #ec4899; color: #fff; border-radius: 6px;
+    padding: 5px 14px; font-size: 13px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    white-space: nowrap; align-self: flex-start;
+  }
 </style>
 </head>
 <body>
@@ -222,6 +279,19 @@
 <div id="ticker-wrap">
   <div id="ticker-tag">📢 News</div>
   <div id="ticker-track"><span id="ticker-text"></span></div>
+</div>
+
+<!-- AD BANNER -->
+<div id="ad-banner">
+  <img id="ad-banner-img" alt="">
+  <div class="ad-banner-body">
+    <span class="ad-banner-tag">📣 Sponsor</span>
+    <span class="ad-banner-title" id="ad-title"></span>
+    <span class="ad-banner-text"  id="ad-text"></span>
+    <span class="ad-banner-link"  id="ad-link-wrap" style="display:none;">
+      <span id="ad-link-text">Scopri di più</span> →
+    </span>
+  </div>
 </div>
 
 <!-- SCOUT STATS PANEL -->
@@ -520,6 +590,36 @@
     toggleCol(document.getElementById('roster-col-away'), awayVisible);
   }
 
+  function applyAd(d) {
+    const banner   = document.getElementById('ad-banner');
+    const img      = document.getElementById('ad-banner-img');
+    const titleEl  = document.getElementById('ad-title');
+    const textEl   = document.getElementById('ad-text');
+    const linkWrap = document.getElementById('ad-link-wrap');
+    const linkText = document.getElementById('ad-link-text');
+
+    if (!d.adVisible) {
+      banner.classList.remove('show');
+      return;
+    }
+    titleEl.textContent = d.adTitle || '';
+    textEl.textContent  = d.adText  || '';
+    if (d.adImage) {
+      img.src = d.adImage;
+      img.classList.add('visible');
+    } else {
+      img.classList.remove('visible');
+    }
+    if (d.adLink) {
+      linkWrap.style.display = 'inline-flex';
+      linkText.textContent   = d.adLinkText || 'Scopri di più';
+      // Il link nel browser OBS non è cliccabile — il testo è puramente decorativo
+    } else {
+      linkWrap.style.display = 'none';
+    }
+    banner.classList.add('show');
+  }
+
   onValue(ref(db, 'match'), (snap) => {
     const d = snap.val();
     if (!d) return;
@@ -539,6 +639,7 @@
     applySponsor(d.sponsorLogo || '', d.sponsorLabel || '', !!d.sponsorVisible);
     applyTicker(d.tickerText || '', !!d.tickerVisible, d.tickerText2 || '', !!d.tickerVisible2);
     applyRoster(d.rosterHomeText || '', d.rosterAwayText || '', d.homeName || '', d.awayName || '', !!d.rosterHomeVisible, !!d.rosterAwayVisible);
+    applyAd(d);
 
     // FIX: rinominata as2 → awayScore per leggibilità
     const homeScore = d.homeScore ?? 0;

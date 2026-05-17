@@ -206,6 +206,30 @@
   }
   .scout-reset-btn:active { background: #2a1a1a; }
 
+  /* AD BANNER CARD */
+  .ad-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    border-top: 3px solid #ec4899;
+  }
+  .ad-preview-wrap {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ad-thumb {
+    width: 80px; height: 50px; border-radius: 8px;
+    background: #fff; border: 1px solid var(--border);
+    object-fit: contain; display: none; padding: 4px; flex-shrink: 0;
+  }
+  .ad-thumb.visible { display: block; }
+  .ad-ph {
+    width: 80px; height: 50px; border-radius: 8px;
+    background: #2a2a2a; border: 1px dashed #444;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+  }
+  #tog-ad:checked + .toggle-slider { background: #ec4899; }
+
   #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #333; transition: transform 0.3s; white-space: nowrap; z-index: 999; }
   #toast.show { transform: translateX(-50%) translateY(0); }
   .divider { height: 1px; background: var(--border); margin: 16px 16px 0; }
@@ -527,6 +551,38 @@
 
 <div class="divider"></div>
 
+<!-- BANNER PUBBLICITARIO -->
+<div class="section" style="padding-top:16px;">
+  <div class="section-title">📣 Banner Pubblicitario</div>
+  <div class="ad-card">
+    <!-- Anteprima immagine + URL -->
+    <div class="ad-preview-wrap">
+      <div class="ad-ph" id="ph-ad">📢</div>
+      <img class="ad-thumb" id="prev-ad" alt="anteprima banner">
+      <input class="field" id="inp-ad-image" placeholder="URL immagine (opzionale)" oninput="previewAd()">
+    </div>
+    <!-- Titolo -->
+    <input class="field" id="inp-ad-title" placeholder="Titolo pubblicità" oninput="pushAllDebounced()">
+    <!-- Testo descrittivo -->
+    <textarea class="field" id="inp-ad-text" placeholder="Testo descrittivo (opzionale)" style="resize:none;height:56px;font-family:'Barlow',sans-serif;font-size:13px;" oninput="pushAllDebounced()"></textarea>
+    <!-- Link e testo link su due colonne -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <input class="field" id="inp-ad-link" placeholder="URL link" oninput="pushAllDebounced()">
+      <input class="field" id="inp-ad-link-text" placeholder="Testo link" oninput="pushAllDebounced()">
+    </div>
+    <!-- Toggle visibilità -->
+    <div class="sponsor-toggle">
+      <label class="toggle-switch">
+        <input type="checkbox" id="tog-ad" onchange="pushAll(false)">
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">Mostra banner sullo stream</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
 <!-- SQUADRE -->
 <div class="section">
   <div class="section-title">Squadre e Punteggio</div>
@@ -744,7 +800,8 @@
       tickerText: '', tickerVisible: false,
       tickerText2: '', tickerVisible2: false,
       rosterHomeText: '', rosterAwayText: '', rosterHomeVisible: false, rosterAwayVisible: false,
-      homeScore: 0, awayScore: 0, homeSets: 0, awaySets: 0
+      homeScore: 0, awayScore: 0, homeSets: 0, awaySets: 0,
+      adTitle: '', adText: '', adImage: '', adLink: '', adLinkText: '', adVisible: false
     };
 
     function applyLogoPreview(team, url) {
@@ -757,6 +814,13 @@
     function applySponsorPreview(url) {
       const img = document.getElementById('prev-sponsor');
       const ph  = document.getElementById('ph-sponsor');
+      if (url) { img.src = url; img.classList.add('visible'); ph.style.display = 'none'; }
+      else      { img.classList.remove('visible'); ph.style.display = 'flex'; }
+    }
+
+    function applyAdPreview(url) {
+      const img = document.getElementById('prev-ad');
+      const ph  = document.getElementById('ph-ad');
       if (url) { img.src = url; img.classList.add('visible'); ph.style.display = 'none'; }
       else      { img.classList.remove('visible'); ph.style.display = 'flex'; }
     }
@@ -782,9 +846,16 @@
       document.getElementById('tog-roster-away').checked = !!d.rosterAwayVisible;
       document.getElementById('inp-sponsor-label').value = d.sponsorLabel || '';
       document.getElementById('tog-sponsor').checked     = !!d.sponsorVisible;
+      document.getElementById('inp-ad-title').value      = d.adTitle     || '';
+      document.getElementById('inp-ad-text').value       = d.adText      || '';
+      document.getElementById('inp-ad-image').value      = d.adImage     || '';
+      document.getElementById('inp-ad-link').value       = d.adLink      || '';
+      document.getElementById('inp-ad-link-text').value  = d.adLinkText  || '';
+      document.getElementById('tog-ad').checked          = !!d.adVisible;
       applyLogoPreview('home', d.homeLogo || '');
       applyLogoPreview('away', d.awayLogo || '');
       applySponsorPreview(d.sponsorLogo || '');
+      applyAdPreview(d.adImage || '');
       ['homeScore','awayScore','homeSets','awaySets'].forEach(k => {
         document.getElementById('val-' + k).textContent = d[k] ?? 0;
         state[k] = d[k] ?? 0;
@@ -802,6 +873,10 @@
 
     window.previewSponsor = function() {
       applySponsorPreview(document.getElementById('inp-sponsor-logo').value.trim());
+    };
+
+    window.previewAd = function() {
+      applyAdPreview(document.getElementById('inp-ad-image').value.trim());
     };
 
     window.change = function(key, delta) {
@@ -828,6 +903,12 @@
       state.rosterAwayText = document.getElementById('inp-roster-away').value;
       state.rosterHomeVisible = document.getElementById('tog-roster-home').checked;
       state.rosterAwayVisible = document.getElementById('tog-roster-away').checked;
+      state.adTitle    = document.getElementById('inp-ad-title').value.trim();
+      state.adText     = document.getElementById('inp-ad-text').value.trim();
+      state.adImage    = document.getElementById('inp-ad-image').value.trim();
+      state.adLink     = document.getElementById('inp-ad-link').value.trim();
+      state.adLinkText = document.getElementById('inp-ad-link-text').value.trim();
+      state.adVisible  = document.getElementById('tog-ad').checked;
       set(matchRef, state);
       if (showToast) toast('Salvato!');
     };
