@@ -449,6 +449,115 @@
   </div>
 </div>
 
+<!-- BANNER PUBBLICITARIO -->
+<div class="section" style="padding-top:16px;">
+  <div class="section-title">📣 Banner Pubblicitari</div>
+
+  <!-- Contenitore slot dinamici -->
+  <div id="ad-slots-container"></div>
+
+  <!-- Aggiungi slot -->
+  <button class="ad-add-btn" onclick="addAdSlot()">+ Aggiungi Pubblicità</button>
+
+  <!-- Durata per slot (carosello) -->
+  <div style="margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;">
+    <div class="ad-duration-row">
+      <label>Durata slide</label>
+      <input type="range" id="inp-ad-duration" min="3" max="30" step="1" value="8" oninput="updateDurationLabel();pushAllDebounced();">
+      <span class="ad-duration-val" id="lbl-ad-duration">8s</span>
+    </div>
+    <div style="font-family:'Barlow',sans-serif;font-size:11px;color:#555;margin-top:4px;">
+      Con 1 sola pubblicità rimane fissa. Con 2+ ruota automaticamente.
+    </div>
+  </div>
+
+  <!-- Toggle visibilità globale -->
+  <div class="sponsor-toggle" style="margin-top:10px;padding:0 2px;">
+    <label class="toggle-switch">
+      <input type="checkbox" id="tog-ad" onchange="pushAll(false)">
+      <span class="toggle-slider"></span>
+    </label>
+    <span class="toggle-label">Mostra banner sullo stream</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SQUADRE -->
+<div class="section">
+  <div class="section-title">Squadre e Punteggio</div>
+  <button onclick="swapTeams()" style="
+    width:100%; padding:10px; border-radius:8px; border:1px solid #3a3a3a;
+    background:#2a2a2a; color:#fff; font-family:'Barlow Condensed',sans-serif;
+    font-size:14px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+    margin-bottom:10px; transition:background 0.15s;
+  " ontouchstart="" onmousedown="this.style.background='#f0a500';this.style.color='#111'"
+     onmouseup="this.style.background='#2a2a2a';this.style.color='#fff'"
+     ontouchend="this.style.background='#2a2a2a';this.style.color='#fff'">
+    ⇄ Inverti squadre
+  </button>
+  <div class="teams-grid">
+
+    <div class="team-card home">
+      <span class="team-label">🟡 Casa</span>
+      <input class="field name" id="inp-home-name" value="" placeholder="Nome">
+      <div class="logo-row">
+        <div class="logo-ph" id="ph-home">🏐</div>
+        <img class="logo-thumb" id="prev-home" alt="">
+        <input class="field" id="inp-home-logo" placeholder="URL logo" oninput="previewLogo('home')">
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Punti</span>
+        <div class="counter-controls">
+          <button class="cnt-btn minus" ontouchstart="" onclick="change('homeScore',-1)">−</button>
+          <span class="cnt-val" id="val-homeScore">0</span>
+          <button class="cnt-btn" ontouchstart="" onclick="change('homeScore',+1)">+</button>
+        </div>
+      </div>
+      <div style="height:1px;background:#2a2a2a;margin:6px 0;"></div>
+      <div class="counter-row">
+        <span class="counter-label">Set</span>
+        <div class="counter-controls">
+          <button class="cnt-btn minus" ontouchstart="" onclick="change('homeSets',-1)">−</button>
+          <span class="cnt-val" id="val-homeSets">0</span>
+          <button class="cnt-btn" ontouchstart="" onclick="change('homeSets',+1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-card away">
+      <span class="team-label">🔴 Ospite</span>
+      <input class="field name" id="inp-away-name" value="" placeholder="Nome">
+      <div class="logo-row">
+        <div class="logo-ph" id="ph-away">🏐</div>
+        <img class="logo-thumb" id="prev-away" alt="">
+        <input class="field" id="inp-away-logo" placeholder="URL logo" oninput="previewLogo('away')">
+      </div>
+      <div class="counter-row">
+        <span class="counter-label">Punti</span>
+        <div class="counter-controls">
+          <button class="cnt-btn minus" ontouchstart="" onclick="change('awayScore',-1)">−</button>
+          <span class="cnt-val" id="val-awayScore">0</span>
+          <button class="cnt-btn" ontouchstart="" onclick="change('awayScore',+1)">+</button>
+        </div>
+      </div>
+      <div style="height:1px;background:#2a2a2a;margin:6px 0;"></div>
+      <div class="counter-row">
+        <span class="counter-label">Set</span>
+        <div class="counter-controls">
+          <button class="cnt-btn minus" ontouchstart="" onclick="change('awaySets',-1)">−</button>
+          <span class="cnt-val" id="val-awaySets">0</span>
+          <button class="cnt-btn" ontouchstart="" onclick="change('awaySets',+1)">+</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
 <!-- SCOUT -->
 <div class="section" style="padding-top:16px;">
   <div class="section-title">📊 Scout Partita</div>
@@ -587,115 +696,6 @@
     </div>
 
     <button class="scout-reset-btn" onclick="scoutReset()">🗑 Azzera statistiche</button>
-  </div>
-</div>
-
-<div class="divider"></div>
-
-<!-- BANNER PUBBLICITARIO -->
-<div class="section" style="padding-top:16px;">
-  <div class="section-title">📣 Banner Pubblicitari</div>
-
-  <!-- Contenitore slot dinamici -->
-  <div id="ad-slots-container"></div>
-
-  <!-- Aggiungi slot -->
-  <button class="ad-add-btn" onclick="addAdSlot()">+ Aggiungi Pubblicità</button>
-
-  <!-- Durata per slot (carosello) -->
-  <div style="margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;">
-    <div class="ad-duration-row">
-      <label>Durata slide</label>
-      <input type="range" id="inp-ad-duration" min="3" max="30" step="1" value="8" oninput="updateDurationLabel();pushAllDebounced();">
-      <span class="ad-duration-val" id="lbl-ad-duration">8s</span>
-    </div>
-    <div style="font-family:'Barlow',sans-serif;font-size:11px;color:#555;margin-top:4px;">
-      Con 1 sola pubblicità rimane fissa. Con 2+ ruota automaticamente.
-    </div>
-  </div>
-
-  <!-- Toggle visibilità globale -->
-  <div class="sponsor-toggle" style="margin-top:10px;padding:0 2px;">
-    <label class="toggle-switch">
-      <input type="checkbox" id="tog-ad" onchange="pushAll(false)">
-      <span class="toggle-slider"></span>
-    </label>
-    <span class="toggle-label">Mostra banner sullo stream</span>
-  </div>
-</div>
-
-<div class="divider"></div>
-
-<!-- SQUADRE -->
-<div class="section">
-  <div class="section-title">Squadre e Punteggio</div>
-  <button onclick="swapTeams()" style="
-    width:100%; padding:10px; border-radius:8px; border:1px solid #3a3a3a;
-    background:#2a2a2a; color:#fff; font-family:'Barlow Condensed',sans-serif;
-    font-size:14px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase;
-    cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
-    margin-bottom:10px; transition:background 0.15s;
-  " ontouchstart="" onmousedown="this.style.background='#f0a500';this.style.color='#111'"
-     onmouseup="this.style.background='#2a2a2a';this.style.color='#fff'"
-     ontouchend="this.style.background='#2a2a2a';this.style.color='#fff'">
-    ⇄ Inverti squadre
-  </button>
-  <div class="teams-grid">
-
-    <div class="team-card home">
-      <span class="team-label">🟡 Casa</span>
-      <input class="field name" id="inp-home-name" value="" placeholder="Nome">
-      <div class="logo-row">
-        <div class="logo-ph" id="ph-home">🏐</div>
-        <img class="logo-thumb" id="prev-home" alt="">
-        <input class="field" id="inp-home-logo" placeholder="URL logo" oninput="previewLogo('home')">
-      </div>
-      <div class="counter-row">
-        <span class="counter-label">Punti</span>
-        <div class="counter-controls">
-          <button class="cnt-btn minus" ontouchstart="" onclick="change('homeScore',-1)">−</button>
-          <span class="cnt-val" id="val-homeScore">0</span>
-          <button class="cnt-btn" ontouchstart="" onclick="change('homeScore',+1)">+</button>
-        </div>
-      </div>
-      <div style="height:1px;background:#2a2a2a;margin:6px 0;"></div>
-      <div class="counter-row">
-        <span class="counter-label">Set</span>
-        <div class="counter-controls">
-          <button class="cnt-btn minus" ontouchstart="" onclick="change('homeSets',-1)">−</button>
-          <span class="cnt-val" id="val-homeSets">0</span>
-          <button class="cnt-btn" ontouchstart="" onclick="change('homeSets',+1)">+</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="team-card away">
-      <span class="team-label">🔴 Ospite</span>
-      <input class="field name" id="inp-away-name" value="" placeholder="Nome">
-      <div class="logo-row">
-        <div class="logo-ph" id="ph-away">🏐</div>
-        <img class="logo-thumb" id="prev-away" alt="">
-        <input class="field" id="inp-away-logo" placeholder="URL logo" oninput="previewLogo('away')">
-      </div>
-      <div class="counter-row">
-        <span class="counter-label">Punti</span>
-        <div class="counter-controls">
-          <button class="cnt-btn minus" ontouchstart="" onclick="change('awayScore',-1)">−</button>
-          <span class="cnt-val" id="val-awayScore">0</span>
-          <button class="cnt-btn" ontouchstart="" onclick="change('awayScore',+1)">+</button>
-        </div>
-      </div>
-      <div style="height:1px;background:#2a2a2a;margin:6px 0;"></div>
-      <div class="counter-row">
-        <span class="counter-label">Set</span>
-        <div class="counter-controls">
-          <button class="cnt-btn minus" ontouchstart="" onclick="change('awaySets',-1)">−</button>
-          <span class="cnt-val" id="val-awaySets">0</span>
-          <button class="cnt-btn" ontouchstart="" onclick="change('awaySets',+1)">+</button>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 
