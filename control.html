@@ -206,29 +206,70 @@
   }
   .scout-reset-btn:active { background: #2a1a1a; }
 
-  /* AD BANNER CARD */
-  .ad-card {
+  /* AD BANNER CARD — multi-slot */
+  .ad-slot {
     background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 12px;
-    display: flex; flex-direction: column; gap: 10px;
-    border-top: 3px solid #ec4899;
+    border-radius: 12px; padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+    border-left: 3px solid #ec4899; position: relative;
+    margin-bottom: 8px;
   }
-  .ad-preview-wrap {
-    display: flex; align-items: center; gap: 10px;
+  .ad-slot-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 2px;
   }
+  .ad-slot-label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 10px;
+    font-weight: 700; letter-spacing: 0.14em; color: #ec4899;
+    text-transform: uppercase;
+  }
+  .ad-slot-del {
+    background: #2a1a1a; border: 1px solid #e53e3e44; color: #e53e3e;
+    border-radius: 6px; padding: 3px 10px; cursor: pointer;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+    font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .ad-slot-del:active { background: #3a1a1a; }
+  .ad-preview-wrap { display: flex; align-items: center; gap: 8px; }
   .ad-thumb {
-    width: 80px; height: 50px; border-radius: 8px;
+    width: 70px; height: 44px; border-radius: 6px;
     background: #fff; border: 1px solid var(--border);
-    object-fit: contain; display: none; padding: 4px; flex-shrink: 0;
+    object-fit: contain; display: none; padding: 3px; flex-shrink: 0;
   }
   .ad-thumb.visible { display: block; }
   .ad-ph {
-    width: 80px; height: 50px; border-radius: 8px;
+    width: 70px; height: 44px; border-radius: 6px;
     background: #2a2a2a; border: 1px dashed #444;
     display: flex; align-items: center; justify-content: center;
-    font-size: 22px; flex-shrink: 0;
+    font-size: 20px; flex-shrink: 0;
   }
+  /* durata carosello */
+  .ad-duration-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ad-duration-row label {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
+    font-weight: 700; letter-spacing: 0.08em; color: var(--muted);
+    text-transform: uppercase; white-space: nowrap;
+  }
+  .ad-duration-row input[type=range] {
+    flex: 1; accent-color: #ec4899;
+  }
+  .ad-duration-val {
+    font-family: 'Barlow Condensed', sans-serif; font-size: 14px;
+    font-weight: 900; color: #ec4899; min-width: 32px; text-align: right;
+  }
+  /* toggle ad globale */
   #tog-ad:checked + .toggle-slider { background: #ec4899; }
+  /* pulsante aggiungi slot */
+  .ad-add-btn {
+    width: 100%; padding: 11px; border-radius: 8px;
+    border: 1px dashed #ec489966; background: #1a0a12;
+    color: #ec4899; font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; cursor: pointer; transition: background 0.15s;
+  }
+  .ad-add-btn:active { background: #2a1020; }
 
   #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px); background: #222; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; border: 1px solid #333; transition: transform 0.3s; white-space: nowrap; z-index: 999; }
   #toast.show { transform: translateX(-50%) translateY(0); }
@@ -553,31 +594,33 @@
 
 <!-- BANNER PUBBLICITARIO -->
 <div class="section" style="padding-top:16px;">
-  <div class="section-title">📣 Banner Pubblicitario</div>
-  <div class="ad-card">
-    <!-- Anteprima immagine + URL -->
-    <div class="ad-preview-wrap">
-      <div class="ad-ph" id="ph-ad">📢</div>
-      <img class="ad-thumb" id="prev-ad" alt="anteprima banner">
-      <input class="field" id="inp-ad-image" placeholder="URL immagine (opzionale)" oninput="previewAd()">
+  <div class="section-title">📣 Banner Pubblicitari</div>
+
+  <!-- Contenitore slot dinamici -->
+  <div id="ad-slots-container"></div>
+
+  <!-- Aggiungi slot -->
+  <button class="ad-add-btn" onclick="addAdSlot()">+ Aggiungi Pubblicità</button>
+
+  <!-- Durata per slot (carosello) -->
+  <div style="margin-top:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;">
+    <div class="ad-duration-row">
+      <label>Durata slide</label>
+      <input type="range" id="inp-ad-duration" min="3" max="30" step="1" value="8" oninput="updateDurationLabel();pushAllDebounced();">
+      <span class="ad-duration-val" id="lbl-ad-duration">8s</span>
     </div>
-    <!-- Titolo -->
-    <input class="field" id="inp-ad-title" placeholder="Titolo pubblicità" oninput="pushAllDebounced()">
-    <!-- Testo descrittivo -->
-    <textarea class="field" id="inp-ad-text" placeholder="Testo descrittivo (opzionale)" style="resize:none;height:56px;font-family:'Barlow',sans-serif;font-size:13px;" oninput="pushAllDebounced()"></textarea>
-    <!-- Link e testo link su due colonne -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-      <input class="field" id="inp-ad-link" placeholder="URL link" oninput="pushAllDebounced()">
-      <input class="field" id="inp-ad-link-text" placeholder="Testo link" oninput="pushAllDebounced()">
+    <div style="font-family:'Barlow',sans-serif;font-size:11px;color:#555;margin-top:4px;">
+      Con 1 sola pubblicità rimane fissa. Con 2+ ruota automaticamente.
     </div>
-    <!-- Toggle visibilità -->
-    <div class="sponsor-toggle">
-      <label class="toggle-switch">
-        <input type="checkbox" id="tog-ad" onchange="pushAll(false)">
-        <span class="toggle-slider"></span>
-      </label>
-      <span class="toggle-label">Mostra banner sullo stream</span>
-    </div>
+  </div>
+
+  <!-- Toggle visibilità globale -->
+  <div class="sponsor-toggle" style="margin-top:10px;padding:0 2px;">
+    <label class="toggle-switch">
+      <input type="checkbox" id="tog-ad" onchange="pushAll(false)">
+      <span class="toggle-slider"></span>
+    </label>
+    <span class="toggle-label">Mostra banner sullo stream</span>
   </div>
 </div>
 
@@ -801,7 +844,7 @@
       tickerText2: '', tickerVisible2: false,
       rosterHomeText: '', rosterAwayText: '', rosterHomeVisible: false, rosterAwayVisible: false,
       homeScore: 0, awayScore: 0, homeSets: 0, awaySets: 0,
-      adTitle: '', adText: '', adImage: '', adLink: '', adLinkText: '', adVisible: false
+      ads: [], adVisible: false, adDuration: 8
     };
 
     function applyLogoPreview(team, url) {
@@ -818,11 +861,95 @@
       else      { img.classList.remove('visible'); ph.style.display = 'flex'; }
     }
 
-    function applyAdPreview(url) {
-      const img = document.getElementById('prev-ad');
-      const ph  = document.getElementById('ph-ad');
+    // ── AD SLOTS ────────────────────────────────────────────────────
+    // Ogni slot è { title, text, image, link, linkText }
+    // Renderizza tutti gli slot nel DOM dal array adSlots[]
+    let adSlots = []; // array locale in sync con state.ads
+
+    function renderAdSlots() {
+      const container = document.getElementById('ad-slots-container');
+      container.innerHTML = '';
+      adSlots.forEach((slot, i) => {
+        const div = document.createElement('div');
+        div.className = 'ad-slot';
+        div.dataset.idx = i;
+        div.innerHTML = `
+          <div class="ad-slot-header">
+            <span class="ad-slot-label">📣 Pubblicità ${i + 1}</span>
+            <button class="ad-slot-del" onclick="removeAdSlot(${i})">✕ Rimuovi</button>
+          </div>
+          <div class="ad-preview-wrap">
+            <div class="ad-ph" id="ph-ad-${i}">📢</div>
+            <img class="ad-thumb" id="prev-ad-${i}" alt="">
+            <input class="field" id="ad-image-${i}" placeholder="URL immagine (opzionale)"
+              value="${escHtml(slot.image || '')}"
+              oninput="slotPreviewImg(${i})">
+          </div>
+          <input class="field" id="ad-title-${i}" placeholder="Titolo pubblicità"
+            value="${escHtml(slot.title || '')}" oninput="slotDebounce()">
+          <textarea class="field" id="ad-text-${i}" placeholder="Testo descrittivo (opzionale)"
+            style="resize:none;height:50px;font-family:'Barlow',sans-serif;font-size:13px;"
+            oninput="slotDebounce()">${escHtml(slot.text || '')}</textarea>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input class="field" id="ad-link-${i}" placeholder="URL link"
+              value="${escHtml(slot.link || '')}" oninput="slotDebounce()">
+            <input class="field" id="ad-linktext-${i}" placeholder="Testo link"
+              value="${escHtml(slot.linkText || '')}" oninput="slotDebounce()">
+          </div>
+        `;
+        container.appendChild(div);
+        // applica anteprima immagine se presente
+        if (slot.image) {
+          const img = document.getElementById('prev-ad-' + i);
+          const ph  = document.getElementById('ph-ad-' + i);
+          img.src = slot.image; img.classList.add('visible'); ph.style.display = 'none';
+        }
+      });
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    window.slotPreviewImg = function(i) {
+      const url = document.getElementById('ad-image-' + i).value.trim();
+      const img = document.getElementById('prev-ad-' + i);
+      const ph  = document.getElementById('ph-ad-' + i);
       if (url) { img.src = url; img.classList.add('visible'); ph.style.display = 'none'; }
       else      { img.classList.remove('visible'); ph.style.display = 'flex'; }
+    };
+
+    let slotDebounceTimer = null;
+    window.slotDebounce = function() {
+      clearTimeout(slotDebounceTimer);
+      slotDebounceTimer = setTimeout(() => window.pushAll(false), 500);
+    };
+
+    window.addAdSlot = function() {
+      adSlots.push({ title: '', text: '', image: '', link: '', linkText: '' });
+      renderAdSlots();
+      pushAll(false);
+    };
+
+    window.removeAdSlot = function(i) {
+      adSlots.splice(i, 1);
+      renderAdSlots();
+      pushAll(false);
+    };
+
+    window.updateDurationLabel = function() {
+      const v = document.getElementById('inp-ad-duration').value;
+      document.getElementById('lbl-ad-duration').textContent = v + 's';
+    };
+
+    function readSlotsFromDOM() {
+      return adSlots.map((_, i) => ({
+        title:    document.getElementById('ad-title-' + i)?.value.trim()    || '',
+        text:     document.getElementById('ad-text-' + i)?.value.trim()     || '',
+        image:    document.getElementById('ad-image-' + i)?.value.trim()    || '',
+        link:     document.getElementById('ad-link-' + i)?.value.trim()     || '',
+        linkText: document.getElementById('ad-linktext-' + i)?.value.trim() || '',
+      }));
     }
 
     onValue(matchRef, (snap) => {
@@ -846,16 +973,16 @@
       document.getElementById('tog-roster-away').checked = !!d.rosterAwayVisible;
       document.getElementById('inp-sponsor-label').value = d.sponsorLabel || '';
       document.getElementById('tog-sponsor').checked     = !!d.sponsorVisible;
-      document.getElementById('inp-ad-title').value      = d.adTitle     || '';
-      document.getElementById('inp-ad-text').value       = d.adText      || '';
-      document.getElementById('inp-ad-image').value      = d.adImage     || '';
-      document.getElementById('inp-ad-link').value       = d.adLink      || '';
-      document.getElementById('inp-ad-link-text').value  = d.adLinkText  || '';
-      document.getElementById('tog-ad').checked          = !!d.adVisible;
+      // ads multi-slot
+      adSlots = Array.isArray(d.ads) ? d.ads : [];
+      renderAdSlots();
+      document.getElementById('tog-ad').checked = !!d.adVisible;
+      const dur = d.adDuration || 8;
+      document.getElementById('inp-ad-duration').value = dur;
+      document.getElementById('lbl-ad-duration').textContent = dur + 's';
       applyLogoPreview('home', d.homeLogo || '');
       applyLogoPreview('away', d.awayLogo || '');
       applySponsorPreview(d.sponsorLogo || '');
-      applyAdPreview(d.adImage || '');
       ['homeScore','awayScore','homeSets','awaySets'].forEach(k => {
         document.getElementById('val-' + k).textContent = d[k] ?? 0;
         state[k] = d[k] ?? 0;
@@ -873,10 +1000,6 @@
 
     window.previewSponsor = function() {
       applySponsorPreview(document.getElementById('inp-sponsor-logo').value.trim());
-    };
-
-    window.previewAd = function() {
-      applyAdPreview(document.getElementById('inp-ad-image').value.trim());
     };
 
     window.change = function(key, delta) {
@@ -903,12 +1026,9 @@
       state.rosterAwayText = document.getElementById('inp-roster-away').value;
       state.rosterHomeVisible = document.getElementById('tog-roster-home').checked;
       state.rosterAwayVisible = document.getElementById('tog-roster-away').checked;
-      state.adTitle    = document.getElementById('inp-ad-title').value.trim();
-      state.adText     = document.getElementById('inp-ad-text').value.trim();
-      state.adImage    = document.getElementById('inp-ad-image').value.trim();
-      state.adLink     = document.getElementById('inp-ad-link').value.trim();
-      state.adLinkText = document.getElementById('inp-ad-link-text').value.trim();
+      state.ads        = readSlotsFromDOM();
       state.adVisible  = document.getElementById('tog-ad').checked;
+      state.adDuration = parseInt(document.getElementById('inp-ad-duration').value, 10) || 8;
       set(matchRef, state);
       if (showToast) toast('Salvato!');
     };

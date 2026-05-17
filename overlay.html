@@ -206,22 +206,22 @@
   @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
   @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
-  /* AD BANNER */
+  /* AD BANNER — carosello multi-slide */
   #ad-banner {
     position: absolute;
-    bottom: 125px; /* sopra la scoreboard (74px) + ticker (34px) + gap */
+    bottom: 125px;
     left: 50%;
-    transform: translateX(-50%) translateY(20px);
+    transform: translateX(-50%) translateY(16px);
     background: rgba(15,15,15,0.96);
     border-radius: 14px;
     border-left: 4px solid #ec4899;
-    padding: 14px 22px 14px 16px;
     display: flex;
     align-items: center;
     gap: 16px;
-    max-width: 680px;
+    max-width: 700px;
     min-width: 320px;
     filter: drop-shadow(0 6px 32px rgba(0,0,0,0.8));
+    overflow: hidden;          /* clips la slide in uscita */
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -233,35 +233,73 @@
     transform: translateX(-50%) translateY(0);
     transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0s;
   }
-  #ad-banner-img {
+  /* Le slide sono posizionate in un viewport interno */
+  #ad-slides-viewport {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+  .ad-slide {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 22px 14px 16px;
+    width: 100%;
+    /* transizione slide */
+    position: absolute; top: 0; left: 0;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none;
+  }
+  .ad-slide.active {
+    position: relative;   /* occupa spazio nel flusso → determina altezza viewport */
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+  .ad-slide.exit {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  .ad-slide-img {
     width: 80px; height: 56px; border-radius: 8px;
     object-fit: contain; background: #fff;
     padding: 4px; flex-shrink: 0; display: none;
   }
-  #ad-banner-img.visible { display: block; }
-  .ad-banner-body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
-  .ad-banner-tag {
+  .ad-slide-img.visible { display: block; }
+  .ad-slide-body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+  .ad-slide-tag {
     font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
     color: #ec4899; text-transform: uppercase;
   }
-  .ad-banner-title {
+  .ad-slide-title {
     font-size: 22px; font-weight: 900; color: #fff;
     letter-spacing: 0.04em; white-space: nowrap;
     overflow: hidden; text-overflow: ellipsis;
   }
-  .ad-banner-text {
-    font-size: 14px; font-weight: 400; color: #aaa;
-    letter-spacing: 0.02em; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis;
-    font-family: 'Barlow Condensed', sans-serif;
+  .ad-slide-text {
+    font-size: 14px; color: #aaa; letter-spacing: 0.02em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .ad-banner-link {
+  .ad-slide-link {
     display: inline-flex; align-items: center; gap: 6px; margin-top: 4px;
     background: #ec4899; color: #fff; border-radius: 6px;
     padding: 5px 14px; font-size: 13px; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
     white-space: nowrap; align-self: flex-start;
   }
+  /* paginazione punti */
+  #ad-dots {
+    position: absolute;
+    bottom: 7px; right: 12px;
+    display: flex; gap: 5px; align-items: center;
+  }
+  .ad-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #555; transition: background 0.3s;
+  }
+  .ad-dot.on { background: #ec4899; }
 </style>
 </head>
 <body>
@@ -281,17 +319,12 @@
   <div id="ticker-track"><span id="ticker-text"></span></div>
 </div>
 
-<!-- AD BANNER -->
+<!-- AD BANNER carosello -->
 <div id="ad-banner">
-  <img id="ad-banner-img" alt="">
-  <div class="ad-banner-body">
-    <span class="ad-banner-tag">📣 Sponsor</span>
-    <span class="ad-banner-title" id="ad-title"></span>
-    <span class="ad-banner-text"  id="ad-text"></span>
-    <span class="ad-banner-link"  id="ad-link-wrap" style="display:none;">
-      <span id="ad-link-text">Scopri di più</span> →
-    </span>
+  <div id="ad-slides-viewport">
+    <!-- slides iniettate via JS -->
   </div>
+  <div id="ad-dots"></div>
 </div>
 
 <!-- SCOUT STATS PANEL -->
@@ -590,33 +623,126 @@
     toggleCol(document.getElementById('roster-col-away'), awayVisible);
   }
 
-  function applyAd(d) {
-    const banner   = document.getElementById('ad-banner');
-    const img      = document.getElementById('ad-banner-img');
-    const titleEl  = document.getElementById('ad-title');
-    const textEl   = document.getElementById('ad-text');
-    const linkWrap = document.getElementById('ad-link-wrap');
-    const linkText = document.getElementById('ad-link-text');
+  // ── AD BANNER CAROSELLO ─────────────────────────────────────────
+  let adCarousel = { ads: [], cur: 0, timer: null, duration: 8000 };
 
-    if (!d.adVisible) {
+  function buildSlide(ad, idx) {
+    const div = document.createElement('div');
+    div.className = 'ad-slide';
+    div.dataset.idx = idx;
+
+    if (ad.image) {
+      const img = document.createElement('img');
+      img.className = 'ad-slide-img visible';
+      img.src = ad.image; img.alt = '';
+      div.appendChild(img);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'ad-slide-body';
+
+    const tag = document.createElement('span');
+    tag.className = 'ad-slide-tag';
+    tag.textContent = '📣 Sponsor';
+    body.appendChild(tag);
+
+    if (ad.title) {
+      const t = document.createElement('span');
+      t.className = 'ad-slide-title';
+      t.textContent = ad.title;
+      body.appendChild(t);
+    }
+    if (ad.text) {
+      const tx = document.createElement('span');
+      tx.className = 'ad-slide-text';
+      tx.textContent = ad.text;
+      body.appendChild(tx);
+    }
+    if (ad.link && ad.linkText) {
+      const lk = document.createElement('span');
+      lk.className = 'ad-slide-link';
+      lk.textContent = (ad.linkText || 'Scopri di più') + ' →';
+      body.appendChild(lk);
+    }
+
+    div.appendChild(body);
+    return div;
+  }
+
+  function buildDots(n, cur) {
+    const dotsEl = document.getElementById('ad-dots');
+    dotsEl.innerHTML = '';
+    if (n <= 1) return; // nessun dot se singola slide
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement('span');
+      d.className = 'ad-dot' + (i === cur ? ' on' : '');
+      dotsEl.appendChild(d);
+    }
+  }
+
+  function goToSlide(newIdx) {
+    const vp = document.getElementById('ad-slides-viewport');
+    const slides = vp.querySelectorAll('.ad-slide');
+    const cur = adCarousel.cur;
+    if (slides.length === 0) return;
+    newIdx = ((newIdx % slides.length) + slides.length) % slides.length;
+    if (newIdx === cur && slides.length > 1) return;
+
+    slides[cur]?.classList.add('exit');
+    setTimeout(() => slides[cur]?.classList.remove('active', 'exit'), 450);
+    slides[newIdx].classList.add('active');
+    adCarousel.cur = newIdx;
+    buildDots(slides.length, newIdx);
+  }
+
+  function startCarousel() {
+    stopCarousel();
+    const n = adCarousel.ads.length;
+    if (n <= 1) return; // singola slide: niente timer
+    adCarousel.timer = setInterval(() => {
+      goToSlide((adCarousel.cur + 1) % n);
+    }, adCarousel.duration);
+  }
+
+  function stopCarousel() {
+    if (adCarousel.timer) { clearInterval(adCarousel.timer); adCarousel.timer = null; }
+  }
+
+  function applyAd(d) {
+    const banner = document.getElementById('ad-banner');
+    const ads    = Array.isArray(d.ads) ? d.ads.filter(a => a.title || a.image) : [];
+
+    if (!d.adVisible || ads.length === 0) {
+      stopCarousel();
       banner.classList.remove('show');
       return;
     }
-    titleEl.textContent = d.adTitle || '';
-    textEl.textContent  = d.adText  || '';
-    if (d.adImage) {
-      img.src = d.adImage;
-      img.classList.add('visible');
+
+    adCarousel.duration = (d.adDuration || 8) * 1000;
+
+    // Ricostruisce le slide solo se il contenuto è cambiato
+    const newKey = JSON.stringify(ads);
+    if (adCarousel._lastKey !== newKey) {
+      adCarousel._lastKey = newKey;
+      adCarousel.ads = ads;
+      adCarousel.cur = 0;
+      stopCarousel();
+
+      const vp = document.getElementById('ad-slides-viewport');
+      vp.innerHTML = '';
+      ads.forEach((ad, i) => {
+        const slide = buildSlide(ad, i);
+        if (i === 0) slide.classList.add('active');
+        vp.appendChild(slide);
+      });
+      buildDots(ads.length, 0);
+      startCarousel();
     } else {
-      img.classList.remove('visible');
+      // Aggiorna solo la durata se cambiata
+      stopCarousel();
+      startCarousel();
     }
-    if (d.adLink) {
-      linkWrap.style.display = 'inline-flex';
-      linkText.textContent   = d.adLinkText || 'Scopri di più';
-      // Il link nel browser OBS non è cliccabile — il testo è puramente decorativo
-    } else {
-      linkWrap.style.display = 'none';
-    }
+
     banner.classList.add('show');
   }
 
