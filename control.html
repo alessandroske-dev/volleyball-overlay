@@ -275,69 +275,6 @@
   #toast.show { transform: translateX(-50%) translateY(0); }
   .divider { height: 1px; background: var(--border); margin: 16px 16px 0; }
 
-  /* THEME SECTION */
-  .theme-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 12px; padding: 14px 12px;
-    display: flex; flex-direction: column; gap: 14px;
-    border-top: 3px solid #818cf8;
-  }
-  .theme-row {
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  }
-  .theme-label {
-    font-family: 'Barlow Condensed', sans-serif; font-size: 12px;
-    font-weight: 700; letter-spacing: 0.1em; color: var(--muted);
-    text-transform: uppercase; flex: 1;
-  }
-  .theme-color-wrap {
-    display: flex; align-items: center; gap: 8px;
-  }
-  .theme-color-input {
-    width: 38px; height: 38px; border-radius: 8px; border: 2px solid #333;
-    cursor: pointer; padding: 2px; background: transparent;
-    -webkit-appearance: none; appearance: none;
-  }
-  .theme-color-input::-webkit-color-swatch-wrapper { padding: 0; }
-  .theme-color-input::-webkit-color-swatch { border-radius: 5px; border: none; }
-  .theme-hex {
-    background: #222; border: 1px solid var(--border); color: var(--text);
-    padding: 6px 8px; border-radius: 6px; width: 88px;
-    font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 600;
-    text-transform: uppercase; -webkit-appearance: none;
-  }
-  .theme-hex:focus { outline: none; border-color: #818cf8; }
-  .theme-slider-wrap { display: flex; align-items: center; gap: 10px; flex: 1; }
-  .theme-slider {
-    flex: 1; accent-color: #818cf8;
-    height: 4px; cursor: pointer;
-  }
-  .theme-slider-val {
-    font-family: 'Barlow Condensed', sans-serif; font-size: 15px;
-    font-weight: 900; color: #818cf8; min-width: 36px; text-align: right;
-  }
-  .theme-select {
-    background: #222; border: 1px solid var(--border); color: var(--text);
-    padding: 8px 10px; border-radius: 6px; font-size: 13px; font-weight: 600;
-    font-family: 'Barlow Condensed', sans-serif; -webkit-appearance: none;
-    flex: 1; cursor: pointer;
-  }
-  .theme-select:focus { outline: none; border-color: #818cf8; }
-  .theme-reset-btn {
-    width: 100%; padding: 10px; border-radius: 8px;
-    border: 1px dashed #81 8cf866; background: #0e0e1a;
-    color: #818cf8; font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 700; letter-spacing: 0.1em;
-    text-transform: uppercase; cursor: pointer; transition: background 0.15s;
-    border: 1px dashed #818cf866;
-  }
-  .theme-reset-btn:active { background: #15152a; }
-  .theme-preview-bar {
-    border-radius: 8px; height: 42px; display: flex; align-items: center;
-    justify-content: center; gap: 0; overflow: hidden; margin-bottom: 2px;
-    font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 900;
-  }
-
   /* LOGIN SCREEN */
   #login-screen {
     position: fixed; inset: 0; z-index: 9999;
@@ -764,143 +701,6 @@
 
 <div class="divider"></div>
 
-<!-- TEMA OVERLAY -->
-<div class="section" style="padding-top:16px;">
-  <div class="section-title">🎨 Tema Overlay</div>
-  <div class="theme-card">
-
-    <!-- Anteprima live del tema -->
-    <div class="theme-preview-bar" id="theme-preview-bar">
-      <div id="tprev-home" style="flex:1;height:100%;display:flex;align-items:center;padding:0 12px;gap:8px;">
-        <span style="font-size:20px;">🏐</span>
-        <span id="tprev-hname" style="font-size:16px;letter-spacing:0.06em;">CASA</span>
-      </div>
-      <div id="tprev-center" style="display:flex;align-items:center;height:100%;padding:0 14px;gap:10px;">
-        <span id="tprev-hscore" style="font-size:22px;">0</span>
-        <span style="opacity:0.4;font-size:14px;">─</span>
-        <span id="tprev-ascore" style="font-size:22px;">0</span>
-      </div>
-      <div id="tprev-away" style="flex:1;height:100%;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;gap:8px;">
-        <span id="tprev-aname" style="font-size:16px;letter-spacing:0.06em;">OSPITE</span>
-        <span style="font-size:20px;">🏐</span>
-      </div>
-    </div>
-
-    <!-- Colore accento (oro default) -->
-    <div class="theme-row">
-      <span class="theme-label">🟡 Colore accento</span>
-      <div class="theme-color-wrap">
-        <input type="color" class="theme-color-input" id="tc-accent" value="#f0a500"
-          oninput="syncHex('tc-accent','th-accent');applyThemePreview();themeDebounce()">
-        <input type="text" class="theme-hex" id="th-accent" value="#f0a500" maxlength="7"
-          oninput="syncColor('th-accent','tc-accent');applyThemePreview();themeDebounce()">
-      </div>
-    </div>
-
-    <!-- Colore squadra ospite -->
-    <div class="theme-row">
-      <span class="theme-label">🔴 Colore ospite</span>
-      <div class="theme-color-wrap">
-        <input type="color" class="theme-color-input" id="tc-away" value="#e53e3e"
-          oninput="syncHex('tc-away','th-away');applyThemePreview();themeDebounce()">
-        <input type="text" class="theme-hex" id="th-away" value="#e53e3e" maxlength="7"
-          oninput="syncColor('th-away','tc-away');applyThemePreview();themeDebounce()">
-      </div>
-    </div>
-
-    <!-- Colore sfondo scoreboard -->
-    <div class="theme-row">
-      <span class="theme-label">⬛ Sfondo squadre</span>
-      <div class="theme-color-wrap">
-        <input type="color" class="theme-color-input" id="tc-scorebg" value="#1a1a1a"
-          oninput="syncHex('tc-scorebg','th-scorebg');applyThemePreview();themeDebounce()">
-        <input type="text" class="theme-hex" id="th-scorebg" value="#1a1a1a" maxlength="7"
-          oninput="syncColor('th-scorebg','tc-scorebg');applyThemePreview();themeDebounce()">
-      </div>
-    </div>
-
-    <!-- Colore testo squadre -->
-    <div class="theme-row">
-      <span class="theme-label">🔤 Testo nomi squadre</span>
-      <div class="theme-color-wrap">
-        <input type="color" class="theme-color-input" id="tc-teamtext" value="#ffffff"
-          oninput="syncHex('tc-teamtext','th-teamtext');applyThemePreview();themeDebounce()">
-        <input type="text" class="theme-hex" id="th-teamtext" value="#ffffff" maxlength="7"
-          oninput="syncColor('th-teamtext','tc-teamtext');applyThemePreview();themeDebounce()">
-      </div>
-    </div>
-
-    <!-- Colore testo punteggio (sul blocco centrale) -->
-    <div class="theme-row">
-      <span class="theme-label">🔢 Testo punteggio</span>
-      <div class="theme-color-wrap">
-        <input type="color" class="theme-color-input" id="tc-scoretext" value="#1a1a1a"
-          oninput="syncHex('tc-scoretext','th-scoretext');applyThemePreview();themeDebounce()">
-        <input type="text" class="theme-hex" id="th-scoretext" value="#1a1a1a" maxlength="7"
-          oninput="syncColor('th-scoretext','tc-scoretext');applyThemePreview();themeDebounce()">
-      </div>
-    </div>
-
-    <!-- Font family -->
-    <div class="theme-row">
-      <span class="theme-label">🔡 Font</span>
-      <select class="theme-select" id="tc-font" onchange="applyThemePreview();themeDebounce()">
-        <option value="Barlow Condensed">Barlow Condensed (default)</option>
-        <option value="Oswald">Oswald</option>
-        <option value="Anton">Anton</option>
-        <option value="Bebas Neue">Bebas Neue</option>
-        <option value="Teko">Teko</option>
-        <option value="Rajdhani">Rajdhani</option>
-      </select>
-    </div>
-
-    <!-- Font size punteggio -->
-    <div class="theme-row">
-      <span class="theme-label">📏 Dim. punteggio</span>
-      <div class="theme-slider-wrap">
-        <input type="range" class="theme-slider" id="tc-scoresize" min="28" max="80" step="2" value="48"
-          oninput="document.getElementById('tv-scoresize').textContent=this.value+'px';applyThemePreview();themeDebounce()">
-        <span class="theme-slider-val" id="tv-scoresize">48px</span>
-      </div>
-    </div>
-
-    <!-- Font size nome squadra -->
-    <div class="theme-row">
-      <span class="theme-label">📏 Dim. nomi squadre</span>
-      <div class="theme-slider-wrap">
-        <input type="range" class="theme-slider" id="tc-namesize" min="14" max="48" step="1" value="28"
-          oninput="document.getElementById('tv-namesize').textContent=this.value+'px';applyThemePreview();themeDebounce()">
-        <span class="theme-slider-val" id="tv-namesize">28px</span>
-      </div>
-    </div>
-
-    <!-- Altezza scoreboard -->
-    <div class="theme-row">
-      <span class="theme-label">📐 Altezza scoreboard</span>
-      <div class="theme-slider-wrap">
-        <input type="range" class="theme-slider" id="tc-sbheight" min="50" max="120" step="2" value="74"
-          oninput="document.getElementById('tv-sbheight').textContent=this.value+'px';applyThemePreview();themeDebounce()">
-        <span class="theme-slider-val" id="tv-sbheight">74px</span>
-      </div>
-    </div>
-
-    <!-- Opacità sfondo ticker/roster -->
-    <div class="theme-row">
-      <span class="theme-label">🌫 Opacità sfondi</span>
-      <div class="theme-slider-wrap">
-        <input type="range" class="theme-slider" id="tc-opacity" min="60" max="100" step="1" value="100"
-          oninput="document.getElementById('tv-opacity').textContent=this.value+'%';themeDebounce()">
-        <span class="theme-slider-val" id="tv-opacity">100%</span>
-      </div>
-    </div>
-
-    <!-- Reset tema -->
-    <button class="theme-reset-btn" onclick="resetTheme()">↺ Ripristina tema predefinito</button>
-  </div>
-</div>
-
-<div class="divider"></div>
-
 <div class="actions">
   <button class="act-btn primary full" onclick="pushAll()">💾 Salva tutto</button>
   <button class="act-btn danger" onclick="resetScores()">🔄 Reset punti</button>
@@ -913,7 +713,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
@@ -937,25 +737,13 @@
   const btnLogout   = document.getElementById('btn-logout');
   const loginError  = document.getElementById('login-error');
 
-  // Controlla subito se stiamo tornando da un redirect Google
-  btnGoogle.disabled = true;
-  btnGoogle.style.opacity = '0.6';
-  getRedirectResult(auth).then((result) => {
-    // result è null se non c'è stato redirect — normale al primo carico
-    btnGoogle.disabled = false;
-    btnGoogle.style.opacity = '1';
-  }).catch((e) => {
-    btnGoogle.disabled = false;
-    btnGoogle.style.opacity = '1';
-    loginError.textContent = 'Errore di accesso: ' + (e.message || e.code || 'riprova');
-  });
-
-  btnGoogle.addEventListener('click', () => {
+  btnGoogle.addEventListener('click', async () => {
     loginError.textContent = '';
-    btnGoogle.disabled = true;
-    btnGoogle.style.opacity = '0.6';
-    btnGoogle.textContent = 'Reindirizzamento...';
-    signInWithRedirect(auth, provider);
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      loginError.textContent = 'Accesso annullato o non riuscito.';
+    }
   });
 
   // FIX: rilascia il Wake Lock al logout e azzera status-dot esplicitamente
@@ -1164,151 +952,10 @@
       }));
     }
 
-    // ── TEMA ────────────────────────────────────────────────────────
-    const themeRef = ref(db, 'theme');
-
-    const THEME_DEFAULTS = {
-      accent:    '#f0a500',
-      away:      '#e53e3e',
-      scoreBg:   '#1a1a1a',
-      teamText:  '#ffffff',
-      scoreText: '#1a1a1a',
-      font:      'Barlow Condensed',
-      scoreSize: 48,
-      nameSize:  28,
-      sbHeight:  74,
-      opacity:   100
-    };
-
-    // Carica font aggiuntivi che potrebbero non essere nel link iniziale
-    function ensureFont(family) {
-      const safeMap = {
-        'Oswald':       'Oswald:wght@400;700',
-        'Anton':        'Anton',
-        'Bebas Neue':   'Bebas+Neue',
-        'Teko':         'Teko:wght@400;600;700',
-        'Rajdhani':     'Rajdhani:wght@400;600;700',
-      };
-      if (!safeMap[family]) return;
-      const id = 'gf-' + family.replace(/ /g, '-');
-      if (document.getElementById(id)) return;
-      const link = document.createElement('link');
-      link.id = id; link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/css2?family=' + safeMap[family] + '&display=swap';
-      document.head.appendChild(link);
-    }
-
-    function syncHex(colorId, hexId) {
-      document.getElementById(hexId).value = document.getElementById(colorId).value;
-    }
-    window.syncHex = syncHex;
-
-    function syncColor(hexId, colorId) {
-      const v = document.getElementById(hexId).value;
-      if (/^#[0-9a-fA-F]{6}$/.test(v)) document.getElementById(colorId).value = v;
-    }
-    window.syncColor = syncColor;
-
-    function applyThemePreview() {
-      const accent    = document.getElementById('tc-accent').value;
-      const away      = document.getElementById('tc-away').value;
-      const scoreBg   = document.getElementById('tc-scorebg').value;
-      const teamText  = document.getElementById('tc-teamtext').value;
-      const scoreText = document.getElementById('tc-scoretext').value;
-      const font      = document.getElementById('tc-font').value;
-      const nameSize  = document.getElementById('tc-namesize').value;
-      const scoreSize = document.getElementById('tc-scoresize').value;
-      const sbHeight  = document.getElementById('tc-sbheight').value;
-      ensureFont(font);
-      const bar   = document.getElementById('theme-preview-bar');
-      const hDiv  = document.getElementById('tprev-home');
-      const cDiv  = document.getElementById('tprev-center');
-      const aDiv  = document.getElementById('tprev-away');
-      bar.style.height = Math.round(sbHeight * 0.57) + 'px';
-      hDiv.style.background = scoreBg;
-      hDiv.style.color = teamText;
-      hDiv.style.fontFamily = "'" + font + "', sans-serif";
-      document.getElementById('tprev-hname').style.fontSize = Math.round(nameSize * 0.57) + 'px';
-      cDiv.style.background = accent;
-      cDiv.style.color = scoreText;
-      cDiv.style.fontFamily = "'" + font + "', sans-serif";
-      document.getElementById('tprev-hscore').style.fontSize = Math.round(scoreSize * 0.57) + 'px';
-      document.getElementById('tprev-ascore').style.fontSize = Math.round(scoreSize * 0.57) + 'px';
-      aDiv.style.background = scoreBg;
-      aDiv.style.color = away;
-      aDiv.style.fontFamily = "'" + font + "', sans-serif";
-      document.getElementById('tprev-aname').style.fontSize = Math.round(nameSize * 0.57) + 'px';
-    }
-    window.applyThemePreview = applyThemePreview;
-
-    function readThemeFromDOM() {
-      return {
-        accent:    document.getElementById('tc-accent').value,
-        away:      document.getElementById('tc-away').value,
-        scoreBg:   document.getElementById('tc-scorebg').value,
-        teamText:  document.getElementById('tc-teamtext').value,
-        scoreText: document.getElementById('tc-scoretext').value,
-        font:      document.getElementById('tc-font').value,
-        scoreSize: parseInt(document.getElementById('tc-scoresize').value),
-        nameSize:  parseInt(document.getElementById('tc-namesize').value),
-        sbHeight:  parseInt(document.getElementById('tc-sbheight').value),
-        opacity:   parseInt(document.getElementById('tc-opacity').value),
-      };
-    }
-
-    function applyThemeToDom(t) {
-      if (!t) t = {};
-      const d = THEME_DEFAULTS;
-      document.getElementById('tc-accent').value    = t.accent    || d.accent;
-      document.getElementById('th-accent').value    = t.accent    || d.accent;
-      document.getElementById('tc-away').value      = t.away      || d.away;
-      document.getElementById('th-away').value      = t.away      || d.away;
-      document.getElementById('tc-scorebg').value   = t.scoreBg   || d.scoreBg;
-      document.getElementById('th-scorebg').value   = t.scoreBg   || d.scoreBg;
-      document.getElementById('tc-teamtext').value  = t.teamText  || d.teamText;
-      document.getElementById('th-teamtext').value  = t.teamText  || d.teamText;
-      document.getElementById('tc-scoretext').value = t.scoreText || d.scoreText;
-      document.getElementById('th-scoretext').value = t.scoreText || d.scoreText;
-      document.getElementById('tc-font').value      = t.font      || d.font;
-      const ss = t.scoreSize || d.scoreSize;
-      document.getElementById('tc-scoresize').value = ss;
-      document.getElementById('tv-scoresize').textContent = ss + 'px';
-      const ns = t.nameSize || d.nameSize;
-      document.getElementById('tc-namesize').value = ns;
-      document.getElementById('tv-namesize').textContent = ns + 'px';
-      const sh = t.sbHeight || d.sbHeight;
-      document.getElementById('tc-sbheight').value = sh;
-      document.getElementById('tv-sbheight').textContent = sh + 'px';
-      const op = t.opacity !== undefined ? t.opacity : d.opacity;
-      document.getElementById('tc-opacity').value = op;
-      document.getElementById('tv-opacity').textContent = op + '%';
-      applyThemePreview();
-    }
-
-    // Carica tema iniziale
-    onValue(themeRef, (snap) => {
-      applyThemeToDom(snap.val());
-    }, { onlyOnce: true });
-
-    let themeDebounceTimer = null;
-    window.themeDebounce = function() {
-      clearTimeout(themeDebounceTimer);
-      themeDebounceTimer = setTimeout(() => {
-        set(themeRef, readThemeFromDOM());
-      }, 400);
-    };
-
-    window.resetTheme = function() {
-      if (!confirm('Ripristinare il tema predefinito?')) return;
-      applyThemeToDom(THEME_DEFAULTS);
-      set(themeRef, THEME_DEFAULTS);
-      toast('Tema predefinito ripristinato');
-    };
-
-    // Inizializza preview al caricamento
-    applyThemePreview();
-
-
+    onValue(matchRef, (snap) => {
+      const d = snap.val();
+      if (!d) return;
+      Object.assign(state, d);
       document.getElementById('inp-comp-label').value    = d.compLabel    || '';
       document.getElementById('inp-comp-name').value     = d.compName     || '';
       document.getElementById('inp-home-name').value     = d.homeName     || '';
