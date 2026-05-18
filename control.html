@@ -913,7 +913,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
@@ -937,13 +937,25 @@
   const btnLogout   = document.getElementById('btn-logout');
   const loginError  = document.getElementById('login-error');
 
-  btnGoogle.addEventListener('click', async () => {
+  // Controlla subito se stiamo tornando da un redirect Google
+  btnGoogle.disabled = true;
+  btnGoogle.style.opacity = '0.6';
+  getRedirectResult(auth).then((result) => {
+    // result è null se non c'è stato redirect — normale al primo carico
+    btnGoogle.disabled = false;
+    btnGoogle.style.opacity = '1';
+  }).catch((e) => {
+    btnGoogle.disabled = false;
+    btnGoogle.style.opacity = '1';
+    loginError.textContent = 'Errore di accesso: ' + (e.message || e.code || 'riprova');
+  });
+
+  btnGoogle.addEventListener('click', () => {
     loginError.textContent = '';
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      loginError.textContent = 'Accesso annullato o non riuscito.';
-    }
+    btnGoogle.disabled = true;
+    btnGoogle.style.opacity = '0.6';
+    btnGoogle.textContent = 'Reindirizzamento...';
+    signInWithRedirect(auth, provider);
   });
 
   // FIX: rilascia il Wake Lock al logout e azzera status-dot esplicitamente
