@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LIVE – Partita di Pallavolo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Montserrat:wght@400;600;700;900&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sand:#e8c97a;--sand-dark:#c9a84c;--sky:#1a6fb5;--sky-deep:#0d3d6b;
+  --italy-green:#009246;--italy-red:#ce2b37;--white:#ffffff;
+  --card-bg:rgba(8,25,50,0.78);--card-border:rgba(232,201,122,0.25);
+  --text-muted:rgba(255,255,255,0.55);
+}
+body{color:#fff;font-family:'Montserrat',sans-serif;min-height:100vh;overflow-x:hidden;background:#0d1f35;position:relative}
+.bg-photo{position:fixed;inset:0;z-index:0;background-image:url('https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=1600&q=80&fit=crop&crop=center');background-size:cover;background-position:center top;background-attachment:fixed}
+.bg-photo::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(8,25,50,.55) 0%,rgba(8,25,50,.45) 40%,rgba(8,25,50,.75) 75%,rgba(8,25,50,.97) 100%)}
+.bg-grain{position:fixed;inset:0;z-index:1;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:200px 200px;pointer-events:none}
+.it-ribbon{position:fixed;top:0;left:0;right:0;z-index:200;height:5px;background:linear-gradient(90deg,var(--italy-green) 33.33%,var(--white) 33.33% 66.66%,var(--italy-red) 66.66%)}
+.container{position:relative;z-index:10;max-width:800px;margin:0 auto;padding:2.5rem 1rem 4rem}
+.site-header{text-align:center;padding:1rem 0 .5rem}
+.sport-tag{display:inline-flex;align-items:center;gap:.5rem;font-size:.6rem;letter-spacing:.3rem;text-transform:uppercase;color:var(--sand);background:transparent;border:2px solid var(--sand);border-radius:2rem;padding:.4rem 1.2rem;margin-bottom:1rem}
+.sport-tag svg{width:14px;height:14px;fill:var(--sand)}
+.live-badge{display:inline-flex;align-items:center;gap:.55rem;background:transparent;color:#fff;font-family:'Oswald',sans-serif;font-size:1rem;letter-spacing:.25rem;padding:.45rem 1.4rem;border-radius:3rem;border:2px solid var(--sand);margin:.6rem 0 1rem}
+.dot{width:9px;height:9px;background:#fff;border-radius:50%;animation:blink 1.1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-family:'Oswald',sans-serif;font-size:clamp(1.3rem,4.5vw,2rem);font-weight:700;letter-spacing:.12rem;color:#fff;text-transform:uppercase;line-height:1.15;margin-bottom:.4rem;text-shadow:0 2px 20px rgba(0,0,0,.8)}
+.match-subtitle{font-size:.7rem;letter-spacing:.2rem;text-transform:uppercase;color:var(--sand);opacity:.8;margin-bottom:.3rem}
+.card{background:transparent;border:2px solid var(--sand);border-radius:1.25rem;padding:1.8rem 1.4rem;margin:1.2rem 0;animation:fadeUp .5s ease-out both}
+.card-title{font-size:.6rem;letter-spacing:.22rem;text-transform:uppercase;color:var(--sand);opacity:.7;margin-bottom:1.2rem;text-align:center}
+.teams{display:flex;justify-content:space-between;align-items:center;gap:.8rem}
+.team{text-align:center;flex:1;display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.logo{width:clamp(88px,20vw,120px);height:clamp(88px,20vw,120px);display:grid;place-items:center;background:transparent;border:2px solid var(--sand);border-radius:50%;position:relative;overflow:hidden}
+.logo::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(232,201,122,.15),transparent 70%)}
+.logo img{max-width:78%;max-height:78%;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));transition:transform .35s;position:relative;z-index:1}
+.logo img:hover{transform:scale(1.1) rotate(-3deg)}
+.logo-fallback{font-family:'Oswald',sans-serif;font-size:clamp(1.4rem,4vw,2rem);color:var(--sand);letter-spacing:.1rem}
+.name{font-family:'Oswald',sans-serif;font-weight:600;font-size:clamp(.75rem,2vw,.95rem);text-transform:uppercase;letter-spacing:.06rem;line-height:1.25;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.vs-block{display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.vs{font-family:'Oswald',sans-serif;font-size:clamp(2.8rem,8vw,4.5rem);font-weight:700;color:rgba(232,201,122,.2);line-height:1}
+
+/* SET SCORE */
+.set-score{display:flex;align-items:center;justify-content:center;gap:1.5rem;margin-top:.8rem}
+.set-num{font-family:'Oswald',sans-serif;font-size:clamp(2.5rem,8vw,4rem);font-weight:700;color:var(--sand);line-height:1;min-width:2ch;text-align:center}
+.set-dash{font-family:'Oswald',sans-serif;font-size:clamp(2rem,6vw,3rem);color:rgba(232,201,122,.3);line-height:1}
+
+.info{display:flex;justify-content:center;gap:clamp(.6rem,2.5vw,1.8rem);flex-wrap:wrap;background:transparent;border:2px solid var(--sand);border-radius:.8rem;padding:1rem;margin:1.2rem 0}
+.info>div{display:grid;place-items:center;gap:.25rem}
+.info span:first-child{font-size:.58rem;letter-spacing:.18rem;text-transform:uppercase;color:var(--text-muted)}
+.info span:last-child{font-family:'Oswald',sans-serif;font-size:clamp(.95rem,2.5vw,1.2rem);font-weight:600}
+.sep{width:1px;background:rgba(255,255,255,.1);align-self:stretch}
+.cd-wrap{text-align:center;margin:1.2rem 0}
+.cd-label{font-size:.6rem;letter-spacing:.25rem;text-transform:uppercase;color:var(--sand);opacity:.7;margin-bottom:.8rem}
+.cd{display:inline-flex;gap:.8rem;align-items:flex-end}
+.cd>div{display:grid;place-items:center;gap:.35rem}
+.cd-num{font-family:'Oswald',sans-serif;font-size:clamp(2rem,7vw,3.4rem);font-weight:700;background:transparent;border:2px solid var(--sand);border-radius:.7rem;padding:.4rem .9rem;min-width:clamp(52px,13vw,76px);box-shadow:none;position:relative;overflow:hidden}
+.cd-num::after{content:'';position:absolute;top:0;left:0;right:0;height:40%;background:rgba(255,255,255,.05)}
+.cd-sep{font-family:'Oswald',sans-serif;font-size:clamp(1.6rem,5vw,2.6rem);color:var(--sand);padding-bottom:.5rem;animation:blink 1s infinite}
+.cd-unit{font-size:.62rem;letter-spacing:.1rem;text-transform:uppercase;color:var(--text-muted)}
+.venue-box{text-align:center;background:transparent;border:2px solid var(--sand);border-radius:.8rem;padding:1.2rem;margin:1.2rem 0}
+.venue-name{font-size:.62rem;text-transform:uppercase;letter-spacing:.15rem;color:var(--text-muted);margin-bottom:.4rem}
+.venue-address{font-family:'Oswald',sans-serif;font-size:1rem;color:#fff;margin-bottom:1rem;font-weight:600}
+.map-btn{display:inline-flex;align-items:center;gap:.55rem;background:transparent;color:var(--sand);font-family:'Oswald',sans-serif;font-size:.9rem;letter-spacing:.12rem;padding:.75rem 1.4rem;border:2px solid var(--sand);border-radius:.6rem;cursor:pointer;text-decoration:none;transition:all .3s}
+.map-btn:hover{transform:translateY(-2px);opacity:.8}
+.map-btn svg{width:18px;height:18px}
+.yt{display:flex;align-items:center;justify-content:center;gap:.6rem;background:transparent;border:2px solid var(--sand);border-radius:.7rem;padding:.85rem 1.5rem;margin:1.2rem 0}
+.yt strong{font-family:'Oswald',sans-serif;font-size:1.05rem}
+.player{margin:1.2rem 0;position:relative;padding-top:56.25%;background:#000;border-radius:1rem;overflow:hidden;border:2px solid var(--sand)}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.share{width:100%;background:transparent;color:var(--sand);font-family:'Oswald',sans-serif;font-size:1.05rem;letter-spacing:.2rem;padding:1.15rem;border:2px solid var(--sand);border-radius:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.6rem;transition:all .25s;text-transform:uppercase}
+.share:hover{transform:translateY(-2px);opacity:.8}
+.next-match-banner{background:transparent;border:2px solid var(--sand);border-radius:1rem;padding:1.5rem 1.2rem;margin:1.5rem 0;text-align:center;animation:fadeUp .6s ease-out}
+.next-label{font-size:.62rem;letter-spacing:.25rem;text-transform:uppercase;color:var(--sand);margin-bottom:.5rem;font-weight:700}
+.next-title{font-family:'Oswald',sans-serif;font-size:clamp(1.6rem,5vw,2.3rem);color:#fff;margin-bottom:.8rem}
+.next-teams{display:flex;align-items:center;justify-content:center;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem}
+.next-team{font-weight:700;font-size:clamp(.85rem,2.5vw,1rem);color:#fff}
+.next-team.highlight{color:var(--sand)}
+.next-vs{font-family:'Oswald',sans-serif;font-size:1.4rem;color:rgba(255,255,255,.25)}
+.next-details{display:flex;flex-direction:column;gap:.55rem;align-items:center}
+.next-detail{display:flex;align-items:center;gap:.5rem;font-size:.82rem;color:rgba(255,255,255,.75)}
+.next-detail svg{color:var(--sand)}
+.visit-row{text-align:center;margin:1.6rem 0 .8rem}
+.visit-inner{display:inline-flex;align-items:center;gap:.7rem;background:transparent;border:2px solid var(--sand);border-radius:.7rem;padding:.75rem 1.4rem}
+.footer{text-align:center;margin-top:2.5rem;font-size:.6rem;letter-spacing:.15rem;text-transform:uppercase;opacity:.2}
+@keyframes fadeUp{from{opacity:0;transform:translateY(1.5rem)}to{opacity:1;transform:none}}
+.card:nth-child(1){animation-delay:.1s}.card:nth-child(2){animation-delay:.2s}.card:nth-child(3){animation-delay:.3s}
+@media(max-width:768px){.card{padding:1.2rem .9rem}.logo{width:clamp(68px,22vw,95px);height:clamp(68px,22vw,95px)}.name{font-size:clamp(.68rem,2.8vw,.8rem)}.info{gap:.5rem;padding:.8rem}.cd-num{font-size:clamp(1.7rem,6vw,2.5rem);padding:.3rem .6rem}}
+</style>
+</head>
+<body>
+<div class="bg-photo"></div>
+<div class="bg-grain"></div>
+<div class="it-ribbon"></div>
+
+<div class="container">
+  <div class="site-header">
+    <div class="sport-tag">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 2c1.6 0 3.1.4 4.4 1.2L4.4 17.4A8 8 0 0 1 12 4zm0 16c-1.6 0-3.1-.4-4.4-1.2l12-12.2A8 8 0 0 1 20 12a8 8 0 0 1-8 8z"/></svg>
+      <span id="fb-sport-tag">Pallavolo Indoor · Seconda Divisione Femminile</span>
+    </div>
+    <div class="live-badge"><span class="dot"></span> LIVE</div>
+    <h1 id="fb-h1">ASD Pallavolo Cingia 2^<br>vs Polenghi Blu Volley</h1>
+    <div class="match-subtitle" id="fb-subtitle">Playoff Girrone D · Gara 11686</div>
+  </div>
+
+  <!-- Squadre + Set Score -->
+  <div class="card">
+    <div class="card-title">⚡ Squadre in campo</div>
+    <div class="teams">
+      <div class="team">
+        <div class="logo">
+          <img id="fb-logo-a" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/FIPAV_logo.svg/120px-FIPAV_logo.svg.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='block'" alt="Squadra A">
+          <span class="logo-fallback" style="display:none" id="fb-fallback-a">AAA</span>
+        </div>
+        <div class="name" id="fb-name-a">ASD Pallavolo<br>Cingia 2^</div>
+      </div>
+      <div class="vs-block">
+        <div class="vs">VS</div>
+        <div class="set-score">
+          <span class="set-num" id="fb-sets-a">0</span>
+          <span class="set-dash">–</span>
+          <span class="set-num" id="fb-sets-b">0</span>
+        </div>
+      </div>
+      <div class="team">
+        <div class="logo">
+          <img id="fb-logo-b" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/FIPAV_logo.svg/120px-FIPAV_logo.svg.png"
+               onerror="this.style.display='none';this.nextElementSibling.style.display='block'" alt="Squadra B">
+          <span class="logo-fallback" style="display:none" id="fb-fallback-b">BBB</span>
+        </div>
+        <div class="name" id="fb-name-b">Polenghi Blu<br>Volley Accademia</div>
+      </div>
+    </div>
+
+    <div class="info">
+      <div><span>Data</span><span id="fb-data">15 Mag 2026</span></div>
+      <div class="sep"></div>
+      <div><span>Ora</span><span id="fb-ora">20:30</span></div>
+      <div class="sep"></div>
+      <div><span>Competizione</span><span id="fb-comp">2ª Div. F. Playoff Gir. D</span></div>
+      <div class="sep"></div>
+      <div><span>Luogo</span><span id="fb-luogo">Cingia de' Botti (CR)</span></div>
+    </div>
+  </div>
+
+  <!-- Venue -->
+  <div class="venue-box">
+    <div class="venue-name">📍 Impianto</div>
+    <div class="venue-address" id="fb-impianto">Palestra Comunale · Via Rodano · Cingia de' Botti CR</div>
+    <a id="fb-maps-btn" href="#" target="_blank" class="map-btn">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      Apri in Google Maps
+    </a>
+  </div>
+
+  <!-- Countdown -->
+  <div class="card">
+    <div class="cd-wrap">
+      <div class="cd-label" id="lbl">⏱ Inizia tra</div>
+      <div class="cd">
+        <div><span class="cd-num" id="h">--</span><span class="cd-unit">Ore</span></div>
+        <span class="cd-sep">:</span>
+        <div><span class="cd-num" id="m">--</span><span class="cd-unit">Min</span></div>
+        <span class="cd-sep">:</span>
+        <div><span class="cd-num" id="s">--</span><span class="cd-unit">Sec</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YouTube -->
+  <div class="yt">
+    <span style="color:#ff0000;font-size:1.3rem">▶</span>
+    <span>Segui su YouTube</span>
+    <strong id="fb-yt-handle">@alessandroske</strong>
+  </div>
+
+  <!-- Player -->
+  <div class="player">
+    <iframe id="fb-iframe"
+      src="https://www.youtube.com/embed/GUScR0e0C_E?rel=0&modestbranding=1&autoplay=0"
+      title="Diretta LIVE"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      referrerpolicy="strict-origin-when-cross-origin"
+      allowfullscreen></iframe>
+  </div>
+
+  <!-- Share -->
+  <button class="share" onclick="share()">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="#fff"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
+    Condividi la diretta
+  </button>
+
+  <!-- Visite -->
+  <div class="visit-row">
+    <div class="visit-inner">
+      <span style="font-size:1rem;opacity:.45">👁</span>
+      <span style="font-size:.7rem;opacity:.45;letter-spacing:.12rem;text-transform:uppercase">Visite</span>
+      <img src="https://hits.sh/s593.altervista.org.svg?style=flat&color=1a6fb5&label_color=08193a" alt="visite" style="height:20px">
+    </div>
+  </div>
+
+  <!-- Prossima partita -->
+  <div class="next-match-banner">
+    <div class="next-label">🏐 Prossima partita</div>
+    <div class="next-title" id="fb-next-title">Turno successivo</div>
+    <div class="next-teams">
+      <span class="next-team highlight" id="fb-next-home">ASD Pallavolo Cingia</span>
+      <span class="next-vs">VS</span>
+      <span class="next-team" id="fb-next-away">Da definire</span>
+    </div>
+    <div class="next-details">
+      <div class="next-detail">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        <span id="fb-next-luogo">Cingia de' Botti (CR) – in attesa di conferma</span>
+      </div>
+      <div class="next-detail">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm4.24 16L12 15.45 7.77 18l1.12-4.81-3.73-3.23 4.92-.42L12 5l1.92 4.53 4.92.42-3.73 3.23L16.23 18z"/></svg>
+        <span id="fb-next-comp">2ª Divisione Femminile · Playoff</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer" id="fb-footer">Streaming gratuito · #Alyssa26 · Gara 11686 · Giornata 1</div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
+  authDomain: "volley-overlay.firebaseapp.com",
+  databaseURL: "https://volley-overlay-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "volley-overlay",
+  storageBucket: "volley-overlay.firebasestorage.app",
+  messagingSenderId: "643750913822",
+  appId: "1:643750913822:web:3c1fde3fdceb6a71e3cb0f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Helpers
+const el = id => document.getElementById(id);
+const setText = (id, val) => { if(el(id) && val !== undefined) el(id).innerHTML = val; };
+const setLogo = (imgId, fbId, url) => {
+  const img = el(imgId);
+  if(!img || !url) return;
+  img.src = url;
+  img.style.display = '';
+  const fb = el(fbId);
+  if(fb) fb.style.display = 'none';
+};
+
+let countdownTarget = null;
+let countdownInterval = null;
+
+function startCountdown(isoStr) {
+  if(countdownInterval) clearInterval(countdownInterval);
+  countdownTarget = isoStr ? new Date(isoStr) : null;
+  function tick() {
+    if(!countdownTarget) return;
+    let d = countdownTarget - new Date();
+    if(d <= 0) {
+      el('h').textContent = el('m').textContent = el('s').textContent = '00';
+      el('lbl').textContent = '🔴 DIRETTA IN CORSO!';
+      el('lbl').style.color = 'var(--sand)';
+      return;
+    }
+    el('lbl').textContent = '⏱ Inizia tra';
+    el('lbl').style.color = '';
+    el('h').textContent = String(Math.floor(d/3600000)).padStart(2,'0');
+    el('m').textContent = String(Math.floor((d%3600000)/60000)).padStart(2,'0');
+    el('s').textContent = String(Math.floor((d%60000)/1000)).padStart(2,'0');
+  }
+  tick();
+  countdownInterval = setInterval(tick, 1000);
+}
+
+// Ascolta Firebase /beach_volley
+onValue(ref(db, 'beach_volley'), snap => {
+  const d = snap.val();
+  if(!d) return;
+
+  // Squadre
+  setText('fb-name-a', d.nomeA);
+  setText('fb-name-b', d.nomeB);
+  setText('fb-sets-a', d.setsA ?? 0);
+  setText('fb-sets-b', d.setsB ?? 0);
+  if(d.logoA) setLogo('fb-logo-a','fb-fallback-a', d.logoA);
+  if(d.logoB) setLogo('fb-logo-b','fb-fallback-b', d.logoB);
+
+  // Header
+  setText('fb-h1', d.nomeA && d.nomeB ? (d.nomeA + '<br>vs ' + d.nomeB) : undefined);
+  setText('fb-sport-tag', d.sportTag);
+  setText('fb-subtitle', d.subtitle);
+
+  // Info partita
+  setText('fb-data', d.data);
+  setText('fb-ora', d.ora);
+  setText('fb-comp', d.competizione);
+  setText('fb-luogo', d.luogo);
+
+  // Venue
+  setText('fb-impianto', d.impianto);
+  if(d.mapsUrl) el('fb-maps-btn').href = d.mapsUrl;
+
+  // YouTube
+  setText('fb-yt-handle', d.ytHandle);
+  if(d.ytVideoId) {
+    el('fb-iframe').src = `https://www.youtube.com/embed/${d.ytVideoId}?rel=0&modestbranding=1&autoplay=0`;
+  }
+
+  // Countdown
+  if(d.kickoff) startCountdown(d.kickoff);
+
+  // Prossima partita
+  setText('fb-next-title', d.nextTitle);
+  setText('fb-next-home', d.nextHome);
+  setText('fb-next-away', d.nextAway);
+  setText('fb-next-luogo', d.nextLuogo);
+  setText('fb-next-comp', d.nextComp);
+
+  // Footer
+  setText('fb-footer', d.footer);
+});
+</script>
+
+<script>
+function share() {
+  const p = {title:document.title,text:'🏐 Diretta Live – segui su YouTube!',url:location.href};
+  if(navigator.share) navigator.share(p).catch(()=>{});
+  else navigator.clipboard.writeText(location.href).then(()=>alert('Link copiato!'));
+}
+</script>
+</body>
+</html>
