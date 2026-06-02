@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>📋 Cheatsheet Calendario U16F Lombardia 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0f1a;--surface:#111827;--surface2:#1a2235;
+  --border:#2a3a55;--sand:#e8c97a;--accent:#1a6fb5;
+  --success:#38a169;--text:#f0f4ff;--muted:#6b7a99;
+  --radius:.75rem;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding:1rem 0 3rem}
+
+.header{text-align:center;padding:1.5rem 1rem 1rem}
+.header h1{font-family:'Oswald',sans-serif;font-size:1.3rem;letter-spacing:.1rem;color:var(--sand);text-transform:uppercase}
+.header p{font-size:.75rem;color:var(--muted);margin-top:.4rem}
+
+.wrapper{padding:0 .75rem;display:flex;flex-direction:column;gap:.75rem}
+
+/* CARD TAPPA */
+.tappa{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+.tappa-header{
+  display:flex;align-items:center;gap:.8rem;
+  padding:.85rem 1rem;
+  border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.tappa-num{
+  font-family:'Oswald',sans-serif;font-size:.7rem;letter-spacing:.1rem;
+  color:var(--muted);background:var(--bg);
+  border:1px solid var(--border);border-radius:.35rem;
+  padding:.2rem .55rem;white-space:nowrap;
+}
+.tappa-date{
+  font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;color:var(--sand);
+}
+.tappa-city{font-size:.85rem;font-weight:600;flex:1}
+.tappa-prov{font-size:.7rem;color:var(--muted);margin-left:.2rem}
+
+/* ROWS */
+.rows{display:flex;flex-direction:column}
+.row{
+  display:grid;grid-template-columns:90px 1fr;
+  border-bottom:1px solid rgba(42,58,85,.6);
+}
+.row:last-child{border-bottom:none}
+.row-label{
+  font-size:.62rem;letter-spacing:.1rem;text-transform:uppercase;
+  color:var(--muted);padding:.55rem .75rem;
+  background:rgba(0,0,0,.15);
+  display:flex;align-items:center;
+}
+.row-val{
+  font-size:.82rem;padding:.55rem .75rem;
+  display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;
+  word-break:break-word;
+}
+.row-val strong{font-weight:600}
+
+/* Copy button */
+.copy-btn{
+  background:none;border:1px solid var(--border);border-radius:.3rem;
+  color:var(--muted);font-size:.65rem;padding:.15rem .4rem;cursor:pointer;
+  white-space:nowrap;transition:all .2s;flex-shrink:0;
+}
+.copy-btn:active,.copy-btn.copied{background:var(--success);color:#fff;border-color:var(--success)}
+
+/* Link */
+.ext-link{
+  display:inline-flex;align-items:center;gap:.3rem;
+  color:var(--sand);font-size:.78rem;text-decoration:none;
+  border:1px solid rgba(232,201,122,.3);border-radius:.3rem;
+  padding:.25rem .6rem;transition:all .2s;
+}
+.ext-link:active{background:rgba(232,201,122,.1)}
+.ext-link svg{width:12px;height:12px;fill:var(--sand);flex-shrink:0}
+
+/* Toast */
+.toast{
+  position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(10px);
+  background:#1e2d45;color:#fff;padding:.55rem 1.1rem;border-radius:2rem;
+  font-size:.8rem;white-space:nowrap;opacity:0;transition:all .25s;z-index:999;
+  border:1px solid var(--border);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Legend */
+.legend{
+  margin:.5rem .75rem 0;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:.85rem 1rem;font-size:.72rem;color:var(--muted);line-height:1.7;
+}
+.legend strong{color:var(--sand)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 Cheatsheet Calendario</h1>
+  <p>Under 16 Femminile · Regionale Lombardia 2026 · Tocca 📋 per copiare</p>
+</div>
+
+<div class="legend">
+  <strong>Come usarlo:</strong> apri il control panel, poi tocca 📋 accanto al valore che ti serve per copiarlo negli appunti e incollarlo direttamente nel campo.
+</div>
+
+<div class="wrapper" id="tappe"></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const tappe = [
+  {
+    n: 1,
+    data: "07 Giu 2026",
+    kickoff: "2026-06-07T09:00",
+    citta: "Milano", prov: "MI",
+    struttura: "Quanta Club",
+    indirizzo: "Via Assietta 19, Milano MI",
+    impianto: "Quanta Club · Via Assietta 19 · Milano MI",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Quanta+Club+Via+Assietta+19+Milano",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17831",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66301",
+  },
+  {
+    n: 2,
+    data: "13 Giu 2026",
+    kickoff: "2026-06-13T09:00",
+    citta: "Lodi", prov: "LO",
+    struttura: "Circolo Canottieri Adda",
+    indirizzo: "Via N. Sauro, Lodi LO",
+    impianto: "Circolo Canottieri Adda · Via N. Sauro · Lodi LO",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Circolo+Canottieri+Adda+Via+N+Sauro+Lodi",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17763",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66255",
+  },
+  {
+    n: 3,
+    data: "17 Giu 2026",
+    kickoff: "2026-06-17T09:00",
+    citta: "Gallarate", prov: "VA",
+    struttura: "Insubria Beach Arena",
+    indirizzo: "Via Vigorelli 1, Gallarate VA",
+    impianto: "Insubria Beach Arena · Via Vigorelli 1 · Gallarate VA",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Insubria+Beach+Arena+Via+Vigorelli+1+Gallarate",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17770",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66261",
+  },
+  {
+    n: 4,
+    data: "20 Giu 2026",
+    kickoff: "2026-06-20T09:00",
+    citta: "Cremona", prov: "CR",
+    struttura: "CremonArena",
+    indirizzo: "Piazza Azzurri d'Italia 2/e, Cremona CR",
+    impianto: "CremonArena · P.za Azzurri d'Italia · Cremona CR",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=CremonArena+Piazza+Azzurri+d+Italia+Cremona",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17780",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66263",
+  },
+  {
+    n: 5,
+    data: "04 Lug 2026",
+    kickoff: "2026-07-04T09:00",
+    citta: "Segrate", prov: "MI",
+    struttura: "Beach Life and Volley Soul",
+    indirizzo: "Via per Mirazzano 1, Segrate MI",
+    impianto: "Beach Life and Volley Soul · Via per Mirazzano 1 · Segrate MI",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Beach+Life+and+Volley+Soul+Via+per+Mirazzano+1+Segrate",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17794",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66276",
+  },
+  {
+    n: 6,
+    data: "11 Lug 2026",
+    kickoff: "2026-07-11T09:00",
+    citta: "Scanzorosciate", prov: "BG",
+    struttura: "Beach Village Scanzorosciate",
+    indirizzo: "Piazza Unità d'Italia, Scanzorosciate BG",
+    impianto: "Beach Village · P.za Unità d'Italia · Scanzorosciate BG",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Beach+Village+Scanzorosciate+Piazza+Unita+Italia",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17800",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66282",
+  },
+  {
+    n: 7,
+    data: "18 Lug 2026",
+    kickoff: "2026-07-18T09:00",
+    citta: "Bagnolo Cremasco", prov: "CR",
+    struttura: "Koko Village",
+    indirizzo: "SS Paullese Km 415, Bagnolo Cremasco CR",
+    impianto: "Koko Village · SS Paullese Km 415 · Bagnolo Cremasco CR",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Koko+Village+SS+Paullese+Km415+Bagnolo+Cremasco",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17882",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66422",
+  },
+  {
+    n: 8,
+    data: "26 Lug 2026",
+    kickoff: "2026-07-26T09:00",
+    citta: "Offanengo", prov: "CR",
+    struttura: "Beach Volley Offanengo",
+    indirizzo: "Via Galileo Galilei, Offanengo CR",
+    impianto: "Beach Volley Offanengo · Via G. Galilei · Offanengo CR",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Beach+Volley+Offanengo+Via+Galileo+Galilei+Offanengo",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17840",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66312",
+  },
+  {
+    n: 9,
+    data: "09 Ago 2026",
+    kickoff: "2026-08-09T09:00",
+    citta: "Monzambano", prov: "MN",
+    struttura: "Hot Beach Arena",
+    indirizzo: "Via Generale Dall'Ora 8, Monzambano MN",
+    impianto: "Hot Beach Arena · Via Generale Dall'Ora 8 · Monzambano MN",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Hot+Beach+Arena+Via+Generale+Dall+Ora+8+Monzambano",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17973",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66576",
+  },
+  {
+    n: 10,
+    data: "16 Ago 2026",
+    kickoff: "2026-08-16T09:00",
+    citta: "Offanengo", prov: "CR",
+    struttura: "Beach Volley Offanengo",
+    indirizzo: "Via Galileo Galilei, Offanengo CR",
+    impianto: "Beach Volley Offanengo · Via G. Galilei · Offanengo CR",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Beach+Volley+Offanengo+Via+Galileo+Galilei+Offanengo",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17853",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66324",
+  },
+  {
+    n: 11,
+    data: "23 Ago 2026",
+    kickoff: "2026-08-23T09:00",
+    citta: "Cellatica", prov: "BS",
+    struttura: "Arena Beach",
+    indirizzo: "Via Breda Vecchia, Cellatica BS",
+    impianto: "Arena Beach · Via Breda Vecchia · Cellatica BS",
+    mapsUrl: "https://www.google.com/maps/search/?api=1&query=Arena+Beach+Via+Breda+Vecchia+Cellatica",
+    competizione: "Tappa Giovanile Regionale U16",
+    codice: "17916",
+    fipavUrl: "https://beachvolley.federvolley.it/node/66465",
+  },
+];
+
+function copyText(text, btn) {
+  function fallback() {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try { document.execCommand('copy'); } catch(e) { prompt('Copia manualmente:', text); }
+    document.body.removeChild(ta);
+  }
+  function ok() {
+    btn.classList.add('copied');
+    btn.textContent = '✓';
+    showToast('Copiato: ' + text.substring(0, 40) + (text.length > 40 ? '…' : ''));
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋'; }, 1500);
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(ok).catch(() => { fallback(); ok(); });
+  } else {
+    fallback(); ok();
+  }
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function row(label, value, copyVal) {
+  const v = copyVal ?? value;
+  return `<div class="row">
+    <div class="row-label">${label}</div>
+    <div class="row-val">
+      <span>${value}</span>
+      <button class="copy-btn" onclick="copyText(${JSON.stringify(v)}, this)">📋</button>
+    </div>
+  </div>`;
+}
+
+function linkRow(label, text, href) {
+  return `<div class="row">
+    <div class="row-label">${label}</div>
+    <div class="row-val">
+      <a class="ext-link" href="${href}" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42L17.59 5H14V3zm-1 2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8h-2v8H5V7h8V5z"/></svg>
+        ${text}
+      </a>
+      <button class="copy-btn" onclick="copyText(${JSON.stringify(href)}, this)">📋</button>
+    </div>
+  </div>`;
+}
+
+const container = document.getElementById('tappe');
+
+tappe.forEach(t => {
+  const card = document.createElement('div');
+  card.className = 'tappa';
+  card.innerHTML = `
+    <div class="tappa-header">
+      <span class="tappa-num">Tappa ${t.n}</span>
+      <span class="tappa-date">${t.data}</span>
+      <span class="tappa-city">${t.citta} <span class="tappa-prov">${t.prov}</span></span>
+    </div>
+    <div class="rows">
+      ${row('Data', t.data)}
+      ${row('Luogo', t.citta + ' (' + t.prov + ')', t.citta + ' (' + t.prov + ')')}
+      ${row('Struttura', t.struttura)}
+      ${row('Impianto', t.impianto)}
+      ${row('Indirizzo', t.indirizzo)}
+      ${row('Kickoff', t.kickoff + ' <small style="color:var(--muted)">(formato datetime-local)</small>', t.kickoff)}
+      ${row('Competizione', t.competizione)}
+      ${row('Codice', t.codice)}
+      ${linkRow('Maps', 'Apri Maps', t.mapsUrl)}
+      ${linkRow('FIPAV', 'Scheda torneo', t.fipavUrl)}
+    </div>
+  `;
+  container.appendChild(card);
+});
+</script>
+</body>
+</html>
