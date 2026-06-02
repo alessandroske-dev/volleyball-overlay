@@ -39,6 +39,8 @@ body{padding-bottom:2rem}
 .status-dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
 .status-dot.ok{background:var(--success);box-shadow:0 0 6px var(--success)}
 .status-dot.err{background:var(--danger)}
+.status-dot.loading{background:var(--sand);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ─── SAVE BTN ─── */
 .save-bar{
@@ -57,6 +59,7 @@ body{padding-bottom:2rem}
   display:flex;align-items:center;justify-content:center;gap:.5rem;
 }
 .btn-save:active{transform:scale(.97);opacity:.85}
+.btn-save:disabled{background:#555;color:#aaa;cursor:not-allowed}
 .btn-save.saving{background:#555;color:#aaa}
 .btn-save.saved{background:var(--success);color:#fff}
 
@@ -120,8 +123,6 @@ body{padding-bottom:2rem}
 /* Row 2 col */
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 
-
-
 /* ─── TOGGLE ─── */
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 .toggle-label{font-size:.85rem}
@@ -166,8 +167,8 @@ body{padding-bottom:2rem}
 <div class="topbar">
   <div class="topbar-title">🏐 CONTROL PANEL</div>
   <div class="topbar-status">
-    <div class="status-dot" id="status-dot"></div>
-    <span id="status-text">Connessione...</span>
+    <div class="status-dot loading" id="status-dot"></div>
+    <span id="status-text">Autenticazione...</span>
   </div>
 </div>
 
@@ -341,8 +342,8 @@ body{padding-bottom:2rem}
 </div><!-- /main -->
 
 <div class="save-bar">
-  <button class="btn-save" id="btn-save" onclick="saveAll()">
-    <span>💾</span> Salva tutto su Firebase
+  <button class="btn-save" id="btn-save" onclick="saveAll()" disabled>
+    <span>⏳</span> Connessione...
   </button>
 </div>
 
@@ -350,136 +351,149 @@ body{padding-bottom:2rem}
 
 <!-- Firebase -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
-  authDomain: "volley-overlay.firebaseapp.com",
-  databaseURL: "https://volley-overlay-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "volley-overlay",
-  storageBucket: "volley-overlay.firebasestorage.app",
+  apiKey:            "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
+  authDomain:        "volley-overlay.firebaseapp.com",
+  databaseURL:       "https://volley-overlay-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "volley-overlay",
+  storageBucket:     "volley-overlay.firebasestorage.app",
   messagingSenderId: "643750913822",
-  appId: "1:643750913822:web:3c1fde3fdceb6a71e3cb0f"
+  appId:             "1:643750913822:web:3c1fde3fdceb6a71e3cb0f"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const app  = initializeApp(firebaseConfig);
+const db   = getDatabase(app);
+const auth = getAuth(app);
+
 const dbRef = ref(db, 'beach_volley');
 
-// Stato locale
-window._data = {};
+const FIELDS = [
+  'nomeA','nomeB','logoA','logoB','sportTag','subtitle','data','ora',
+  'competizione','luogo','impianto','mapsUrl','ytVideoId','ytHandle',
+  'nextTitle','nextHome','nextAway','nextLuogo','nextComp','footer'
+];
 
-
-// Status
-function setStatus(ok) {
+// ── UI helpers ──────────────────────────────────────────────
+function setStatus(state, msg) {
   const dot = document.getElementById('status-dot');
   const txt = document.getElementById('status-text');
-  dot.className = 'status-dot ' + (ok ? 'ok' : 'err');
-  txt.textContent = ok ? 'Firebase OK' : 'Errore connessione';
+  dot.className = 'status-dot ' + state;   // loading | ok | err
+  txt.textContent = msg;
 }
 
-// Carica dati esistenti da Firebase all'avvio
-onValue(dbRef, snap => {
-  setStatus(true);
-  const d = snap.val();
-  if(!d) return;
-  window._data = d;
-
-  const fields = ['nomeA','nomeB','logoA','logoB','sportTag','subtitle','data','ora',
-    'competizione','luogo','impianto','mapsUrl','ytVideoId','ytHandle',
-    'nextTitle','nextHome','nextAway','nextLuogo','nextComp','footer'];
-  fields.forEach(f => {
-    const el = document.getElementById(f);
-    if(el && d[f] !== undefined) el.value = d[f];
-  });
-
-  // datetime-local: converte ISO
-  if(d.kickoff) {
-    const dt = new Date(d.kickoff);
-    const local = new Date(dt.getTime() - dt.getTimezoneOffset()*60000)
-      .toISOString().slice(0,16);
-    document.getElementById('kickoff').value = local;
+function setBtnReady(ready) {
+  const btn = document.getElementById('btn-save');
+  btn.disabled = !ready;
+  if (ready) {
+    btn.className = 'btn-save';
+    btn.innerHTML = '<span>💾</span> Salva tutto su Firebase';
   }
+}
 
-  // Preview loghi
-  if(d.logoA) previewLogo('logoA','prevA');
-  if(d.logoB) previewLogo('logoB','prevB');
+// ── Auth anonima → poi subscribe al DB ──────────────────────
+signInAnonymously(auth).catch(err => {
+  setStatus('err', 'Auth fallita');
+  showToast('❌ Auth: ' + err.message);
+});
 
+onAuthStateChanged(auth, user => {
+  if (!user) return;
 
-}, err => setStatus(false));
+  setStatus('loading', 'Connessione DB...');
 
-// Salva tutto
-window.saveAll = async function() {
+  // Subscribe realtime
+  onValue(dbRef, snap => {
+    setStatus('ok', 'Firebase OK');
+    setBtnReady(true);
+
+    const d = snap.val();
+    if (!d) return;
+
+    FIELDS.forEach(f => {
+      const el = document.getElementById(f);
+      if (el && d[f] !== undefined) el.value = d[f];
+    });
+
+    // datetime-local: converte ISO → local
+    if (d.kickoff) {
+      const dt    = new Date(d.kickoff);
+      const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
+                      .toISOString().slice(0, 16);
+      document.getElementById('kickoff').value = local;
+    }
+
+    if (d.logoA) previewLogo('logoA', 'prevA');
+    if (d.logoB) previewLogo('logoB', 'prevB');
+
+  }, err => {
+    setStatus('err', 'Errore DB');
+    showToast('❌ DB: ' + err.message);
+    setBtnReady(false);
+  });
+});
+
+// ── Salva ───────────────────────────────────────────────────
+window.saveAll = async function () {
   const btn = document.getElementById('btn-save');
   btn.className = 'btn-save saving';
-  btn.textContent = '⏳ Salvataggio...';
+  btn.disabled  = true;
+  btn.innerHTML = '<span>⏳</span> Salvataggio...';
 
   const kickoffRaw = document.getElementById('kickoff').value;
   const kickoffISO = kickoffRaw ? new Date(kickoffRaw).toISOString() : null;
 
-  const payload = {
-    nomeA: document.getElementById('nomeA').value,
-    nomeB: document.getElementById('nomeB').value,
-    logoA: document.getElementById('logoA').value,
-    logoB: document.getElementById('logoB').value,
-    sportTag: document.getElementById('sportTag').value,
-    subtitle: document.getElementById('subtitle').value,
-    data: document.getElementById('data').value,
-    ora: document.getElementById('ora').value,
-    kickoff: kickoffISO,
-    competizione: document.getElementById('competizione').value,
-    luogo: document.getElementById('luogo').value,
-    impianto: document.getElementById('impianto').value,
-    mapsUrl: document.getElementById('mapsUrl').value,
-    ytVideoId: document.getElementById('ytVideoId').value,
-    ytHandle: document.getElementById('ytHandle').value,
-    nextTitle: document.getElementById('nextTitle').value,
-    nextHome: document.getElementById('nextHome').value,
-    nextAway: document.getElementById('nextAway').value,
-    nextLuogo: document.getElementById('nextLuogo').value,
-    nextComp: document.getElementById('nextComp').value,
-    footer: document.getElementById('footer').value,
-  };
+  const payload = { kickoff: kickoffISO };
+  FIELDS.forEach(f => {
+    payload[f] = document.getElementById(f).value;
+  });
 
   try {
     await set(dbRef, payload);
     btn.className = 'btn-save saved';
+    btn.disabled  = false;
     btn.innerHTML = '<span>✅</span> Salvato!';
     showToast('✅ Dati aggiornati su Firebase');
     setTimeout(() => {
       btn.className = 'btn-save';
       btn.innerHTML = '<span>💾</span> Salva tutto su Firebase';
     }, 2000);
-  } catch(e) {
+  } catch (e) {
     btn.className = 'btn-save';
+    btn.disabled  = false;
     btn.innerHTML = '<span>💾</span> Salva tutto su Firebase';
     showToast('❌ Errore: ' + e.message);
   }
 };
 
-window.clearAll = function() {
-  if(!confirm('Sei sicuro di voler resettare TUTTI i dati?')) return;
-  set(dbRef, null).then(() => showToast('🗑️ Dati cancellati'));
+// ── Reset ───────────────────────────────────────────────────
+window.clearAll = function () {
+  if (!confirm('Sei sicuro di voler resettare TUTTI i dati?')) return;
+  set(dbRef, null)
+    .then(() => showToast('🗑️ Dati cancellati'))
+    .catch(e  => showToast('❌ ' + e.message));
 };
 </script>
 
 <script>
 // Toggle sezioni
 function toggle(header) {
-  const body = header.nextElementSibling;
+  const body    = header.nextElementSibling;
   const chevron = header.querySelector('.chevron');
-  const isOpen = body.classList.contains('open');
-  body.classList.toggle('open', !isOpen);
+  const isOpen  = body.classList.contains('open');
+  body.classList.toggle('open',    !isOpen);
   chevron.classList.toggle('open', !isOpen);
-  header.classList.toggle('open', !isOpen);
+  header.classList.toggle('open',  !isOpen);
 }
 
 // Preview logo
 function previewLogo(inputId, imgId) {
   const url = document.getElementById(inputId).value;
   const img = document.getElementById(imgId);
-  if(url) { img.src = url; img.style.display = 'block'; }
+  if (url) { img.src = url; img.style.display = 'block'; }
   else img.style.display = 'none';
 }
 window.previewLogo = previewLogo;
