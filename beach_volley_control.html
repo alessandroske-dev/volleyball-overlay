@@ -353,7 +353,7 @@ body{padding-bottom:2rem}
 <script type="module">
 import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
@@ -367,7 +367,8 @@ const firebaseConfig = {
 
 const app  = initializeApp(firebaseConfig);
 const db   = getDatabase(app);
-const auth = getAuth(app);
+const auth     = getAuth(app);
+const provider = new GoogleAuthProvider();
 
 const dbRef = ref(db, 'beach_volley');
 
@@ -381,7 +382,7 @@ const FIELDS = [
 function setStatus(state, msg) {
   const dot = document.getElementById('status-dot');
   const txt = document.getElementById('status-text');
-  dot.className = 'status-dot ' + state;   // loading | ok | err
+  dot.className = 'status-dot ' + state;
   txt.textContent = msg;
 }
 
@@ -394,20 +395,36 @@ function setBtnReady(ready) {
   }
 }
 
-// ── Auth anonima → poi subscribe al DB ──────────────────────
-signInAnonymously(auth).catch(err => {
-  setStatus('err', 'Auth fallita');
-  showToast('❌ Auth: ' + err.message);
+// Click sul nome → logout
+document.getElementById('status-text').style.cursor = 'pointer';
+document.getElementById('status-text').addEventListener('click', () => {
+  if (auth.currentUser) {
+    if (confirm('Esci da ' + (auth.currentUser.displayName || auth.currentUser.email) + '?')) {
+      signOut(auth);
+    }
+  } else {
+    signInWithPopup(auth, provider).catch(e => showToast('❌ ' + e.message));
+  }
+});
+
+// Avvia login Google al caricamento
+signInWithPopup(auth, provider).catch(() => {
+  setStatus('err', 'Clicca per Login');
+  setBtnReady(false);
 });
 
 onAuthStateChanged(auth, user => {
-  if (!user) return;
+  if (!user) {
+    setStatus('err', 'Clicca per Login');
+    setBtnReady(false);
+    return;
+  }
 
   setStatus('loading', 'Connessione DB...');
 
-  // Subscribe realtime
   onValue(dbRef, snap => {
-    setStatus('ok', 'Firebase OK');
+    const name = user.displayName ? user.displayName.split(' ')[0] : 'OK';
+    setStatus('ok', name + ' · Firebase OK');
     setBtnReady(true);
 
     const d = snap.val();
@@ -418,7 +435,6 @@ onAuthStateChanged(auth, user => {
       if (el && d[f] !== undefined) el.value = d[f];
     });
 
-    // datetime-local: converte ISO → local
     if (d.kickoff) {
       const dt    = new Date(d.kickoff);
       const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)

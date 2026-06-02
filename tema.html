@@ -404,8 +404,9 @@
 <div id="toast">✓ Salvato</div>
 
 <script type="module">
-  import { initializeApp }           from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { initializeApp }                              from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue }             from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
@@ -419,9 +420,46 @@
 
   const app      = initializeApp(firebaseConfig);
   const db       = getDatabase(app);
+  const auth     = getAuth(app);
+  const provider = new GoogleAuthProvider();
   const themeRef = ref(db, 'theme');
 
-  document.getElementById('fb-status').textContent = '🟢 Firebase connesso';
+  // ── AUTH UI ─────────────────────────────────────────────────────
+  const btnSaveEl = document.getElementById('btn-save');
+  const statusEl  = document.getElementById('fb-status');
+
+  function setStatus(user) {
+    if (user) {
+      statusEl.textContent = '🟢 ' + (user.displayName || user.email);
+      statusEl.style.color = '#22c55e';
+      btnSaveEl.disabled = false;
+      btnSaveEl.textContent = 'Salva';
+    } else {
+      statusEl.textContent = '🔴 Non autenticato — clicca Login';
+      statusEl.style.color = '#e53e3e';
+      btnSaveEl.disabled = true;
+      btnSaveEl.textContent = 'Salva';
+    }
+  }
+
+  // Bottone login nel fb-status (click)
+  statusEl.style.cursor = 'pointer';
+  statusEl.title = 'Clicca per accedere con Google';
+  statusEl.addEventListener('click', () => {
+    if (auth.currentUser) {
+      if (confirm('Esci da ' + auth.currentUser.displayName + '?')) signOut(auth);
+    } else {
+      signInWithPopup(auth, provider).catch(e => alert('Login fallito: ' + e.message));
+    }
+  });
+
+  onAuthStateChanged(auth, user => {
+    setStatus(user);
+    if (user) {
+      // Carica tema solo dopo auth
+      onValue(themeRef, (snap) => { writeToDom(snap.val() || {}); }, { onlyOnce: true });
+    }
+  });
 
   // ── DEFAULTS & PRESETS ───────────────────────────────────────────
   const DEFAULTS = {
@@ -562,24 +600,23 @@
     toast('Preset ' + name + ' applicato');
   };
 
-  // ── FIREBASE: carica tema al primo accesso ───────────────────────
-  onValue(themeRef, (snap) => { writeToDom(snap.val() || {}); }, { onlyOnce: true });
-
   // ── SALVA ───────────────────────────────────────────────────────
-  const btnSave = document.getElementById('btn-save');
-  btnSave.addEventListener('click', async () => {
+  btnSaveEl.disabled = true;
+  btnSaveEl.addEventListener('click', async () => {
+    if (!auth.currentUser) { alert('Devi fare il login prima.'); return; }
     await set(themeRef, readFromDOM());
-    btnSave.classList.add('saved');
-    btnSave.textContent = '✓ Salvato';
+    btnSaveEl.classList.add('saved');
+    btnSaveEl.textContent = '✓ Salvato';
     setTimeout(() => {
-      btnSave.classList.remove('saved');
-      btnSave.textContent = 'Salva';
+      btnSaveEl.classList.remove('saved');
+      btnSaveEl.textContent = 'Salva';
     }, 1800);
     toast('Tema salvato su Firebase');
   });
 
   // ── RESET ───────────────────────────────────────────────────────
   window.resetTheme = function() {
+    if (!auth.currentUser) { alert('Devi fare il login prima.'); return; }
     if (!confirm('Ripristinare il tema predefinito?')) return;
     writeToDom(DEFAULTS);
     set(themeRef, DEFAULTS);

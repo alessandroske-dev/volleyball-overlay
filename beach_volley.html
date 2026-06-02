@@ -231,6 +231,7 @@ h1{font-family:'Oswald',sans-serif;font-size:clamp(1.3rem,4.5vw,2rem);font-weigh
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCJLdA9iKxoR3WJSrjGM7ltUpjpDRNyiyQ",
@@ -242,8 +243,12 @@ const firebaseConfig = {
   appId: "1:643750913822:web:3c1fde3fdceb6a71e3cb0f"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const app  = initializeApp(firebaseConfig);
+const db   = getDatabase(app);
+const auth = getAuth(app);
+
+// Auth anonima per OBS (nessun popup, solo lettura)
+signInAnonymously(auth).catch(() => {});
 
 // Helpers
 const el = id => document.getElementById(id);
