@@ -796,7 +796,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getDatabase, ref, set, push, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -1069,12 +1069,22 @@
       toast(`Set salvato: ${h}-${a}`);
     };
 
-    window.saveMatchToArchive = function() {
+    window.saveMatchToArchive = async function() {
       const hasSets = state.sets && state.sets.length;
       if (!hasSets && state.homeScore === 0 && state.awayScore === 0) {
         if (!confirm('Non risulta nessun set giocato. Salvare comunque in archivio?')) return;
       }
       if (!confirm('Salvare questa partita in archivio?')) return;
+
+      // FIX: recupera il video/link della diretta corrente (pubblicato dal
+      // Generatore Live in currentMatch/yt) cosi' l'archivio tiene insieme
+      // punteggio E link, non solo il punteggio.
+      let ytId = '';
+      try {
+        const snap = await get(ref(db, 'currentMatch/yt'));
+        ytId = snap.val() || '';
+      } catch (e) { /* se non disponibile, si salva comunque senza link */ }
+
       const record = {
         date: new Date().toISOString(),
         compLabel: state.compLabel || '',
@@ -1084,6 +1094,7 @@
         sets: (state.sets || []).slice(),
         homeSetsWon: state.homeSets || 0,
         awaySetsWon: state.awaySets || 0,
+        yt: ytId,
         scout: {
           home: { ...scoutState.home },
           away: { ...scoutState.away }
@@ -1111,10 +1122,12 @@
       el.innerHTML = entries.map(([key, m]) => {
         const dateLabel = m.date ? new Date(m.date).toLocaleString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
         const setsLabel = (m.sets || []).map(s => `${s.home}-${s.away}`).join(', ');
+        const linkRow = m.yt ? `<div class="ai-meta"><a href="https://youtu.be/${encodeURIComponent(m.yt)}" target="_blank" rel="noopener" style="color:var(--gold)">▶ Guarda la diretta</a></div>` : '';
         return `<div class="archive-item">
           <div class="ai-title">${escHtml(m.homeName || '?')} vs ${escHtml(m.awayName || '?')} — ${m.homeSetsWon || 0}-${m.awaySetsWon || 0}</div>
           <div class="ai-meta">${escHtml(m.compLabel || '')}${m.compName ? ' · ' + escHtml(m.compName) : ''}</div>
           <div class="ai-meta">${dateLabel}${setsLabel ? ' · Set: ' + setsLabel : ''}</div>
+          ${linkRow}
         </div>`;
       }).join('');
     }
@@ -1130,7 +1143,7 @@
       } else {
         const rows = [[
           'Data', 'Competizione Label', 'Competizione Nome', 'Casa', 'Ospite',
-          'Set Casa', 'Set Ospite', 'Punteggi Set',
+          'Set Casa', 'Set Ospite', 'Punteggi Set', 'Link',
           'Ace Casa', 'ErrServ Casa', 'Attacco Casa', 'ErrAtt Casa', 'Muro Casa', 'RicOk Casa', 'RicKo Casa',
           'Ace Ospite', 'ErrServ Ospite', 'Attacco Ospite', 'ErrAtt Ospite', 'Muro Ospite', 'RicOk Ospite', 'RicKo Ospite'
         ]];
@@ -1141,6 +1154,7 @@
             m.date || '', m.compLabel || '', m.compName || '', m.homeName || '', m.awayName || '',
             m.homeSetsWon || 0, m.awaySetsWon || 0,
             (m.sets || []).map(s => `${s.home}-${s.away}`).join(' / '),
+            m.yt ? `https://youtu.be/${m.yt}` : '',
             h.ace || 0, h.srvErr || 0, h.att || 0, h.attErr || 0, h.block || 0, h.recOk || 0, h.recKo || 0,
             a.ace || 0, a.srvErr || 0, a.att || 0, a.attErr || 0, a.block || 0, a.recOk || 0, a.recKo || 0
           ]);
