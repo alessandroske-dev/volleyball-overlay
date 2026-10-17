@@ -232,8 +232,11 @@
   .set-chip {
     background: #222; border: 1px solid var(--border); border-radius: 6px;
     padding: 4px 9px; font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px; font-weight: 700;
+    font-size: 13px; font-weight: 700; color: var(--text);
+    cursor: pointer; -webkit-appearance: none;
   }
+  .set-chip:active { background: #3a1a1a; border-color: #e53e3e; color: #e53e3e; }
+  .set-hint { font-size: 11px; color: var(--muted); }
   .finset-btn, .savematch-btn {
     width: 100%; padding: 12px; border-radius: 8px; border: none;
     font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700;
@@ -1047,7 +1050,38 @@
         el.innerHTML = '<span class="set-history-empty">Nessun set giocato in questa partita</span>';
         return;
       }
-      el.innerHTML = state.sets.map((s, i) => `<span class="set-chip">Set ${i + 1}: ${s.home}-${s.away}</span>`).join('');
+      el.innerHTML = state.sets.map((s, i) => `<button type="button" class="set-chip" onclick="deleteSet(${i})" title="Tocca per eliminare questo set">Set ${i + 1}: ${s.home}-${s.away}</button>`).join('')
+        + '<div class="set-hint" style="width:100%">Tocca un set per eliminarlo</div>';
+    }
+
+    // Elimina un singolo set dallo storico e toglie il set vinto a chi lo aveva preso
+    window.deleteSet = function(i) {
+      const s = state.sets && state.sets[i];
+      if (!s) return;
+      if (!confirm(`Eliminare il Set ${i + 1} (${s.home}-${s.away})?`)) return;
+      state.sets.splice(i, 1);
+      if (s.home > s.away) state.homeSets = Math.max(0, (state.homeSets || 0) - 1);
+      else if (s.away > s.home) state.awaySets = Math.max(0, (state.awaySets || 0) - 1);
+      ['homeSets', 'awaySets'].forEach(k => {
+        document.getElementById('val-' + k).textContent = state[k];
+      });
+      renderSetHistory();
+      set(matchRef, state);
+      toast(`Set ${i + 1} eliminato`);
+    };
+
+    // Azzera punti, set, storico set e scout (nomi, loghi e competizione restano)
+    function resetForNextMatch() {
+      state.homeScore = 0; state.awayScore = 0; state.homeSets = 0; state.awaySets = 0;
+      state.sets = [];
+      ['homeScore', 'awayScore', 'homeSets', 'awaySets'].forEach(k => {
+        document.getElementById('val-' + k).textContent = 0;
+      });
+      SCOUT_KEYS.forEach(k => { scoutState.home[k] = 0; scoutState.away[k] = 0; });
+      renderScout(scoutState);
+      renderSetHistory();
+      set(matchRef, state);
+      set(scoutRef, scoutState);
     }
 
     window.finishSet = function() {
@@ -1101,7 +1135,14 @@
         }
       };
       push(archiveRef, record)
-        .then(() => { toast('Partita salvata in archivio'); loadArchive(); })
+        .then(() => {
+          toast('Partita salvata in archivio');
+          loadArchive();
+          if (confirm('Partita salvata. Azzerare ora punti, set e statistiche scout per la prossima partita?')) {
+            resetForNextMatch();
+            toast('Pronto per la prossima partita');
+          }
+        })
         .catch((e) => toast('Errore salvataggio: ' + e.message));
     };
 
