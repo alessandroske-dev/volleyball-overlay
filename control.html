@@ -17,6 +17,24 @@
 
   .section { padding: 16px 16px 0; }
   .section-title { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+  /* --- Sezioni comprimibili --- */
+  .section-title { cursor: pointer; user-select: none; -webkit-user-select: none; display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+  .section-title::after { content: '\25BE'; font-size: 14px; color: var(--gold); margin-left: 8px; transition: transform .15s; }
+  .section.collapsed > :not(.section-title) { display: none !important; }
+  .section.collapsed > .section-title { margin-bottom: 0; }
+  .section.collapsed > .section-title::after { transform: rotate(-90deg); }
+  .collapse-bar { display: flex; gap: 8px; padding: 10px 16px 0; }
+  .collapse-bar button { flex: 1; background: var(--card); border: 1px solid var(--border); color: var(--muted); font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+  .collapse-bar button:active { background: #262626; color: var(--text); }
+  .collapse-bar { flex-wrap: wrap; }
+  .collapse-bar button.on { border-color: var(--gold); color: var(--gold); }
+  #btn-reset-order { display: none; flex-basis: 100%; }
+  body.reorder-mode #btn-reset-order { display: block; }
+  .section-title .mv { display: none; margin-left: auto; gap: 6px; }
+  body.reorder-mode .section-title .mv { display: inline-flex; }
+  .section-title .mv button { background: #262626; border: 1px solid var(--border); color: var(--gold); width: 38px; height: 32px; border-radius: 8px; font-size: 15px; line-height: 1; cursor: pointer; }
+  .section-title .mv button:disabled { opacity: .25; }
+  .section-title .mv button:active:not(:disabled) { background: #333; }
 
   .info-input { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 10px 12px; border-radius: 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; width: 100%; -webkit-appearance: none; margin-bottom: 8px; display: block; }
   .info-input:focus { outline: none; border-color: var(--gold); }
@@ -404,6 +422,12 @@
   </div>
 </header>
 <div style="background:#161616;padding:6px 20px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;color:#555;border-bottom:1px solid #1e1e1e;" id="wakelock-status">⏳ Attivazione schermo sempre attivo...</div>
+<div class="collapse-bar">
+  <button type="button" id="btn-collapse-all">▸ Comprimi tutto</button>
+  <button type="button" id="btn-expand-all">▾ Espandi tutto</button>
+  <button type="button" id="btn-reorder">↕ Riordina</button>
+  <button type="button" id="btn-reset-order">↺ Ripristina ordine originale</button>
+</div>
 
 <!-- COMPETIZIONE -->
 <div class="section">
@@ -796,6 +820,113 @@
 </div>
 
 <div id="toast">Salvato!</div>
+
+<script>
+// Sezioni comprimibili e riordinabili: tocca il titolo per aprire/chiudere; con "Riordina" compaiono le frecce ▲▼.
+// Stato (chiuse + ordine) salvato su questo dispositivo.
+(function () {
+  var KEY = 'volleyControlCollapsed', KEY_ORDER = 'volleyControlOrder';
+  var saved = {}, savedOrder = [];
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  try { savedOrder = JSON.parse(localStorage.getItem(KEY_ORDER) || '[]') || []; } catch (e) { savedOrder = []; }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+  function persistOrder() { try { localStorage.setItem(KEY_ORDER, JSON.stringify(ids())); } catch (e) {} }
+
+  function titleOf(sec) { return sec.querySelector(':scope > .section-title'); }
+  function idOf(sec) { return titleOf(sec).textContent.trim().replace(/[▲▼]/g, '').trim(); }
+  function all() { return Array.prototype.slice.call(document.querySelectorAll('.section')).filter(titleOf); }
+  var originalOrder = all();            // ordine originale della pagina
+  var originalIds = [];
+
+  // Assegna alle posizioni (slot) esistenti le sezioni nell'ordine richiesto; divisori e altro restano dove sono.
+  function applyOrder(list) {
+    var current = all();
+    var marks = current.map(function (sec) {
+      var m = document.createComment('slot');
+      sec.replaceWith(m);
+      return m;
+    });
+    marks.forEach(function (m, i) { m.replaceWith(list[i]); });
+  }
+  function ids() { return all().map(idOf); }
+
+  // titoli (id) calcolati prima di aggiungere i pulsanti ▲▼
+  originalIds = originalOrder.map(idOf);
+
+  // ordine salvato -> riapplica (sezioni sconosciute in coda, nel loro ordine originale)
+  if (savedOrder.length) {
+    var byId = {};
+    originalOrder.forEach(function (sec, i) { byId[originalIds[i]] = sec; });
+    var wanted = [];
+    savedOrder.forEach(function (id) { if (byId[id] && wanted.indexOf(byId[id]) < 0) wanted.push(byId[id]); });
+    originalOrder.forEach(function (sec) { if (wanted.indexOf(sec) < 0) wanted.push(sec); });
+    applyOrder(wanted);
+  }
+
+  function refreshArrows() {
+    var list = all();
+    list.forEach(function (sec, i) {
+      var mv = titleOf(sec).querySelector('.mv');
+      mv.children[0].disabled = (i === 0);
+      mv.children[1].disabled = (i === list.length - 1);
+    });
+  }
+
+  function move(sec, dir) {
+    var list = all(), i = list.indexOf(sec), j = i + dir;
+    if (j < 0 || j >= list.length) return;
+    var other = list[j], ph = document.createComment('swap');
+    sec.replaceWith(ph); other.replaceWith(sec); ph.replaceWith(other);
+    persistOrder(); refreshArrows();
+    var t = titleOf(sec);
+    if (t.scrollIntoView) t.scrollIntoView({ block: 'nearest' });
+  }
+
+  all().forEach(function (sec) {
+    var title = titleOf(sec), id = idOf(sec);
+    var mv = document.createElement('span');
+    mv.className = 'mv';
+    var up = document.createElement('button'), down = document.createElement('button');
+    up.type = down.type = 'button';
+    up.textContent = '▲'; down.textContent = '▼';
+    up.setAttribute('aria-label', 'Sposta su'); down.setAttribute('aria-label', 'Sposta giù');
+    up.addEventListener('click', function (e) { e.stopPropagation(); move(sec, -1); });
+    down.addEventListener('click', function (e) { e.stopPropagation(); move(sec, 1); });
+    mv.appendChild(up); mv.appendChild(down);
+    title.appendChild(mv);
+    if (saved[id]) sec.classList.add('collapsed');
+    title.addEventListener('click', function () {
+      var c = sec.classList.toggle('collapsed');
+      if (c) saved[id] = 1; else delete saved[id];
+      persist();
+    });
+  });
+  refreshArrows();
+
+  function setAll(collapse) {
+    all().forEach(function (sec) {
+      var id = idOf(sec);
+      sec.classList.toggle('collapsed', collapse);
+      if (collapse) saved[id] = 1; else delete saved[id];
+    });
+    persist();
+  }
+  document.getElementById('btn-collapse-all').addEventListener('click', function () { setAll(true); });
+  document.getElementById('btn-expand-all').addEventListener('click', function () { setAll(false); });
+
+  var btnReorder = document.getElementById('btn-reorder');
+  btnReorder.addEventListener('click', function () {
+    var on = document.body.classList.toggle('reorder-mode');
+    btnReorder.classList.toggle('on', on);
+    btnReorder.textContent = on ? '✓ Fine riordino' : '↕ Riordina';
+  });
+  document.getElementById('btn-reset-order').addEventListener('click', function () {
+    applyOrder(originalOrder);
+    try { localStorage.removeItem(KEY_ORDER); } catch (e) {}
+    refreshArrows();
+  });
+})();
+</script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
