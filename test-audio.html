@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test audio overlay</title>
+<style>
+  html,body{margin:0;height:100%;background:#0b1f4d;color:#fff;font-family:system-ui,sans-serif}
+  body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
+  #stato{font-size:6vw;font-weight:700;padding:2vw 4vw;border-radius:16px;background:#555}
+  #stato.ok{background:#1a9c4a}
+  #stato.ko{background:#c0392b}
+  #info{font-size:3vw;opacity:.85;line-height:1.5}
+  button{font-size:4vw;padding:1.5vw 4vw;border-radius:12px;border:0;background:#f1c40f;font-weight:700}
+</style>
+</head>
+<body>
+<div id="stato">In attesa…</div>
+<div id="info"></div>
+<button id="btn">Avvia audio (tocco)</button>
+
+<script>
+/*
+  Parametri URL:
+    ?mode=beep   (default) tono 440 Hz a intermittenza, generato dal browser
+    ?mode=mp3&src=https://.../file.mp3   riproduce un mp3 in loop
+    ?delay=3     secondi prima del tentativo di avvio automatico (default 3)
+*/
+const P = new URLSearchParams(location.search);
+const mode = P.get('mode') || 'beep';
+const src = P.get('src') || '';
+const delay = parseFloat(P.get('delay') || '3');
+const stato = document.getElementById('stato');
+const info = document.getElementById('info');
+const btn = document.getElementById('btn');
+const t0 = Date.now();
+let started = false, ctx = null, audio = null;
+
+function set(txt, cls){ stato.textContent = txt; stato.className = cls || ''; }
+function tick(){
+  const s = Math.floor((Date.now()-t0)/1000);
+  info.innerHTML = 'Modo: <b>'+mode+'</b>'+(mode==='mp3'?' · '+(src||'(manca src)'):'')+
+    '<br>Tempo pagina: '+s+' s · Audio avviato: <b>'+(started?'sì':'no')+'</b>'+
+    (ctx?'<br>AudioContext: '+ctx.state:'')+
+    (audio?'<br>Audio element: '+(audio.paused?'in pausa':'play')+' · t='+audio.currentTime.toFixed(1)+' s':'');
+}
+setInterval(tick, 500); tick();
+
+function beep(){
+  ctx = new (window.AudioContext||window.webkitAudioContext)();
+  const osc = ctx.createOscillator(), gain = ctx.createGain();
+  osc.frequency.value = 440; osc.connect(gain); gain.connect(ctx.destination);
+  osc.start();
+  // 0,5 s sì / 0,5 s no, per riconoscerlo bene nella diretta
+  setInterval(()=>{ gain.gain.value = gain.gain.value > 0 ? 0 : 0.5; }, 500);
+  gain.gain.value = 0.5;
+  return ctx.resume().then(()=>{
+    if(ctx.state !== 'running') throw new Error('AudioContext '+ctx.state);
+  });
+}
+function mp3(){
+  if(!src) return Promise.reject(new Error('manca ?src='));
+  audio = new Audio(src); audio.loop = true; audio.volume = 1;
+  return audio.play();
+}
+function avvia(){
+  if(started) return;
+  const p = mode === 'mp3' ? mp3() : beep();
+  Promise.resolve(p).then(()=>{
+    started = true; btn.style.display = 'none';
+    set('🔊 AUDIO IN RIPRODUZIONE','ok');
+  }).catch(e=>{
+    set('🔇 BLOCCATO: '+(e && e.message || e),'ko');
+  });
+}
+
+btn.addEventListener('click', avvia);
+setTimeout(avvia, delay*1000);
+set('Avvio automatico tra '+delay+' s…');
+</script>
+</body>
+</html>
