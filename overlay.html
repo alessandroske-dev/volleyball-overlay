@@ -328,6 +328,9 @@
   #pres-card .pc-surname { font-size: 1.7em; font-weight: 900; line-height: 1.05; color: #fff; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
   #pres-card .pc-name { font-size: 1.04em; font-weight: 700; line-height: 1.15; color: #dbe6ff; white-space: nowrap; overflow: hidden; }
   #pres-card .pc-role { display: inline-block; margin-top: 0.3em; background: var(--ov-accent); color: var(--ov-score-text); font-size: 0.77em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 999px; padding: 0.1em 0.6em; }
+  /* lato destro (partite fuori casa): la scheda va sul lato del nome della squadra ospite; più bassa per non toccare lo sponsor in alto a destra */
+  #pres-card.right { left: auto; right: 3.2vw; transform: translateX(30px); --pc-h: min(820px, calc(100vh - 190px - var(--ov-sb-height) - 3.5vh)); }
+  #pres-card.right.in { transform: translateX(0); }
 </style>
 </head>
 <body>
@@ -946,6 +949,7 @@
         nameEl.textContent = p.nome;
         roleEl.textContent = p.ruolo;
         roleEl.style.display = p.ruolo ? 'inline-block' : 'none';
+        card.classList.toggle('right', cue.lato === 'dx');
         photoBox.classList.remove('nophoto');
         imgEl.onerror = () => photoBox.classList.add('nophoto');
         imgEl.src = cue.base + '/live-beta/giocatrici/' + v.num + '.webp';
@@ -990,7 +994,7 @@
           if (n !== null) byNum[n] = { nome: txt(p.nome), cognome: txt(p.cognome).toUpperCase(), ruolo: txt(p.ruolo) };
         });
         const show = Math.min(20, Math.max(3, num(c.show) || 8));
-        const next = { id: txt(c.id), ts: ts, offset: num(c.offset) || 0, show: show, base: c.base, tempi: tempi, byNum: byNum };
+        const next = { id: txt(c.id), ts: ts, offset: num(c.offset) || 0, show: show, lato: c.lato === 'dx' ? 'dx' : 'sx', base: c.base, tempi: tempi, byNum: byNum };
         // un comando vecchio (pagina ricaricata dopo la fine della presentazione) non deve ripartire
         const t0 = (Date.now() + srvOff - ts) / 1000 + next.offset;
         if (t0 > tempi[tempi.length - 1].t + show + 1) return;
