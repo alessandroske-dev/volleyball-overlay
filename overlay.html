@@ -303,6 +303,25 @@
     background: #555; transition: background 0.3s;
   }
   .ad-dot.on { background: #ec4899; }
+
+  /* PRESENTAZIONE SQUADRA: scheda giocatrice comandata dalla console (nodo Firebase presentazioneOverlay) */
+  #pres-card {
+    position: absolute; left: 60px; top: 150px; width: 560px;
+    background: var(--ov-score-bg); border: 6px solid var(--ov-accent); border-radius: 36px;
+    overflow: hidden; box-shadow: 0 10px 50px rgba(0,0,0,0.7); z-index: 60;
+    opacity: 0; visibility: hidden; transform: translateX(-30px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s;
+  }
+  #pres-card.in { opacity: 1; visibility: visible; transform: translateX(0); transition: opacity 0.4s ease, transform 0.45s cubic-bezier(.22,1,.36,1), visibility 0s; }
+  #pres-card .pc-photo { position: relative; width: 100%; height: 520px; background: #222; }
+  #pres-card .pc-photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+  #pres-card .pc-photo.nophoto img { display: none; }
+  #pres-card .pc-info { display: flex; align-items: center; gap: 26px; padding: 20px 28px 24px; }
+  #pres-card .pc-num { font-size: 150px; font-weight: 900; line-height: 0.85; color: var(--ov-accent); flex: none; }
+  #pres-card .pc-txt { flex: 1; min-width: 0; }
+  #pres-card .pc-surname { font-size: 62px; font-weight: 900; line-height: 1.02; color: #fff; text-transform: uppercase; white-space: nowrap; overflow: hidden; }
+  #pres-card .pc-name { font-size: 38px; font-weight: 700; line-height: 1.1; color: #dbe6ff; white-space: nowrap; overflow: hidden; }
+  #pres-card .pc-role { display: inline-block; margin-top: 10px; background: var(--ov-accent); color: var(--ov-score-text); font-size: 28px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 999px; padding: 3px 18px; }
 </style>
 </head>
 <body>
@@ -490,6 +509,18 @@
 </div>
 
 <div id="set-popup">SET!</div>
+
+<div id="pres-card">
+  <div class="pc-photo" id="pc-photo"><img id="pc-img" alt=""></div>
+  <div class="pc-info">
+    <div class="pc-num" id="pc-num"></div>
+    <div class="pc-txt">
+      <div class="pc-surname" id="pc-surname"></div>
+      <div class="pc-name" id="pc-name"></div>
+      <div class="pc-role" id="pc-role"></div>
+    </div>
+  </div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -870,6 +901,100 @@
     updateRecBar(h.recOk ?? 0, h.recKo ?? 0, a.recOk ?? 0, a.recKo ?? 0);
     applyScout(!!d.visible);
   });
+
+  // ── PRESENTAZIONE SQUADRA: schede giocatrici comandate dalla console ──────────
+  // La pagina presentazione-overlay.html scrive sul nodo "presentazioneOverlay" un comando
+  // (start/stop) con l'ora del server, la rosa e i tempi di ogni giocatrice. Qui si calcola
+  // quanti secondi sono passati dal comando (con l'orologio del server, non quello del telefono)
+  // e si mostra la scheda giusta. L'audio NON passa da qui: parte da Prism.
+  (function(){
+    try {
+      const card = document.getElementById('pres-card');
+      const photoBox = document.getElementById('pc-photo');
+      const imgEl = document.getElementById('pc-img');
+      const numEl = document.getElementById('pc-num');
+      const surEl = document.getElementById('pc-surname');
+      const nameEl = document.getElementById('pc-name');
+      const roleEl = document.getElementById('pc-role');
+      let srvOff = 0, cue = null, timer = null, shownIdx = -2;
+
+      onValue(ref(db, '.info/serverTimeOffset'), (s) => { srvOff = s.val() || 0; });
+
+      const okBase = (b) => typeof b === 'string' && /^https:\/\/[A-Za-z0-9.-]+(:\d+)?$/.test(b);
+      const num = (x) => (typeof x === 'number' && isFinite(x)) ? x : null;
+      const txt = (x) => (typeof x === 'string') ? x : '';
+
+      function fitText(el, maxPx, minPx) {
+        let s = maxPx;
+        el.style.fontSize = s + 'px';
+        while (el.scrollWidth > el.clientWidth && s > minPx) { s -= 2; el.style.fontSize = s + 'px'; }
+      }
+      function hide() { card.classList.remove('in'); shownIdx = -2; }
+      function stop() { if (timer) { clearInterval(timer); timer = null; } hide(); cue = null; }
+
+      function show(i) {
+        const v = cue.tempi[i];
+        const p = cue.byNum[v.num] || { nome: '', cognome: '', ruolo: '' };
+        numEl.textContent = String(v.num);
+        surEl.textContent = p.cognome;
+        nameEl.textContent = p.nome;
+        roleEl.textContent = p.ruolo;
+        roleEl.style.display = p.ruolo ? 'inline-block' : 'none';
+        photoBox.classList.remove('nophoto');
+        imgEl.onerror = () => photoBox.classList.add('nophoto');
+        imgEl.src = cue.base + '/live-beta/giocatrici/' + v.num + '.webp';
+        card.classList.remove('in'); void card.offsetWidth; card.classList.add('in');
+        fitText(surEl, 62, 28);
+        fitText(nameEl, 38, 22);
+        shownIdx = i;
+      }
+
+      function elapsed() { return (Date.now() + srvOff - cue.ts) / 1000 + cue.offset; }
+
+      function tick() {
+        if (!cue) return;
+        const t = elapsed();
+        const tp = cue.tempi;
+        if (t > tp[tp.length - 1].t + cue.show + 1) { stop(); return; }
+        let idx = -1;
+        for (let i = 0; i < tp.length; i++) { if (tp[i].t <= t) idx = i; else break; }
+        if (idx < 0) { if (shownIdx !== -2) hide(); return; }
+        const v = tp[idx], nx = tp[idx + 1];
+        const fine = Math.min(v.t + cue.show, nx ? nx.t : Infinity);
+        if (t < fine) { if (shownIdx !== idx) show(idx); }
+        else if (shownIdx !== -2) hide();
+      }
+
+      onValue(ref(db, 'presentazioneOverlay'), (snap) => {
+        const c = snap.val();
+        if (!c || typeof c !== 'object') { stop(); return; }
+        if (c.action === 'stop') { stop(); return; }
+        if (c.action !== 'start') return;
+        if (cue && cue.id === c.id) return;            // stesso comando già in corso
+        const ts = num(c.ts);
+        if (ts === null || !okBase(c.base) || !Array.isArray(c.tempi) || !c.tempi.length) return;
+        const tempi = [];
+        c.tempi.forEach(v => { const n = v ? num(v.num) : null, t = v ? num(v.t) : null; if (n !== null && t !== null) tempi.push({ num: n, t: t }); });
+        if (!tempi.length) return;
+        tempi.sort((a, b) => a.t - b.t);
+        const byNum = {};
+        (Array.isArray(c.giocatrici) ? c.giocatrici : []).forEach(p => {
+          const n = p ? num(p.num) : null;
+          if (n !== null) byNum[n] = { nome: txt(p.nome), cognome: txt(p.cognome).toUpperCase(), ruolo: txt(p.ruolo) };
+        });
+        const show = Math.min(20, Math.max(3, num(c.show) || 8));
+        const next = { id: txt(c.id), ts: ts, offset: num(c.offset) || 0, show: show, base: c.base, tempi: tempi, byNum: byNum };
+        // un comando vecchio (pagina ricaricata dopo la fine della presentazione) non deve ripartire
+        const t0 = (Date.now() + srvOff - ts) / 1000 + next.offset;
+        if (t0 > tempi[tempi.length - 1].t + show + 1) return;
+        stop();
+        cue = next;
+        tempi.forEach(v => { const im = new Image(); im.src = cue.base + '/live-beta/giocatrici/' + v.num + '.webp'; }); // foto già pronte
+        timer = setInterval(tick, 100);
+        tick();
+      }, () => { /* regola Firebase non ancora pubblicata: l'overlay continua a funzionare */ });
+    } catch (e) { /* la presentazione non deve mai rompere l'overlay */ }
+  })();
 </script>
 </body>
 </html>
