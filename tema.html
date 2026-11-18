@@ -383,11 +383,20 @@
     </div>
 
     <div class="ctrl-row">
-      <span class="ctrl-label">🌫 Opacità sfondi</span>
+      <span class="ctrl-label">🌫 Opacità sfondo punteggio</span>
       <div class="slider-wrap">
-        <input type="range" class="slider" id="tc-opacity" min="60" max="100" step="1" value="100"
-          oninput="document.getElementById('tv-opacity').textContent=this.value+'%';updatePreview()">
-        <span class="slider-val" id="tv-opacity">100%</span>
+        <input type="range" class="slider" id="tc-opacity-score" min="0" max="100" step="1" value="100"
+          oninput="document.getElementById('tv-opacity-score').textContent=this.value+'%';updatePreview()">
+        <span class="slider-val" id="tv-opacity-score">100%</span>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">🌫 Opacità sfondo nomi squadre</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-opacity-names" min="0" max="100" step="1" value="100"
+          oninput="document.getElementById('tv-opacity-names').textContent=this.value+'%';updatePreview()">
+        <span class="slider-val" id="tv-opacity-names">100%</span>
       </div>
     </div>
 
@@ -465,7 +474,7 @@
   const DEFAULTS = {
     accent: '#f0a500', away: '#e53e3e', scoreBg: '#1a1a1a',
     teamText: '#ffffff', scoreText: '#1a1a1a', font: 'Barlow Condensed',
-    scoreSize: 48, nameSize: 28, sbHeight: 74, opacity: 100
+    scoreSize: 48, nameSize: 28, sbHeight: 74, opacityScore: 100, opacityNames: 100
   };
 
   const PRESETS = {
@@ -515,6 +524,15 @@
     const nameSize  = document.getElementById('tc-namesize').value;
     const scoreSize = document.getElementById('tc-scoresize').value;
     const sbHeight  = document.getElementById('tc-sbheight').value;
+    const opScore   = parseInt(document.getElementById('tc-opacity-score').value) / 100;
+    const opNames   = parseInt(document.getElementById('tc-opacity-names').value) / 100;
+    // colore esadecimale -> rgba (l'opacità vale solo per lo sfondo, non per il testo)
+    const rgba = (hex, a) => {
+      const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec((hex || '').trim());
+      if (!m) return hex;
+      let h = m[1]; if (h.length === 3) h = h.split('').map(c => c + c).join('');
+      return 'rgba(' + parseInt(h.slice(0,2),16) + ',' + parseInt(h.slice(2,4),16) + ',' + parseInt(h.slice(4,6),16) + ',' + a + ')';
+    };
 
     const ff = "'" + font + "', sans-serif";
     const scale = 0.65;
@@ -525,16 +543,16 @@
     bar.style.fontFamily = ff;
 
     const hDiv = document.getElementById('prev-home');
-    hDiv.style.background = scoreBg; hDiv.style.color = teamText;
+    hDiv.style.background = rgba(scoreBg, opNames); hDiv.style.color = teamText;
     document.getElementById('prev-hname').style.fontSize = Math.round(nameSize * scale) + 'px';
 
     const cDiv = document.getElementById('prev-center');
-    cDiv.style.background = accent; cDiv.style.color = scoreText;
+    cDiv.style.background = rgba(accent, opScore); cDiv.style.color = scoreText;
     document.getElementById('prev-hscore').style.fontSize = Math.round(scoreSize * scale) + 'px';
     document.getElementById('prev-ascore').style.fontSize = Math.round(scoreSize * scale) + 'px';
 
     const aDiv = document.getElementById('prev-away');
-    aDiv.style.background = scoreBg; aDiv.style.color = away;
+    aDiv.style.background = rgba(scoreBg, opNames); aDiv.style.color = away;
     document.getElementById('prev-aname').style.fontSize = Math.round(nameSize * scale) + 'px';
 
     // Ticker tag
@@ -554,7 +572,8 @@
       scoreSize: parseInt(document.getElementById('tc-scoresize').value),
       nameSize:  parseInt(document.getElementById('tc-namesize').value),
       sbHeight:  parseInt(document.getElementById('tc-sbheight').value),
-      opacity:   parseInt(document.getElementById('tc-opacity').value),
+      opacityScore: parseInt(document.getElementById('tc-opacity-score').value),
+      opacityNames: parseInt(document.getElementById('tc-opacity-names').value),
     };
   }
 
@@ -584,9 +603,14 @@
     document.getElementById('tc-sbheight').value = sh;
     document.getElementById('tv-sbheight').textContent = sh + 'px';
 
-    const op = t.opacity !== undefined ? t.opacity : d.opacity;
-    document.getElementById('tc-opacity').value = op;
-    document.getElementById('tv-opacity').textContent = op + '%';
+    // vecchio tema con una sola opacità: vale per entrambe finché non le regoli
+    const opOld = t.opacity !== undefined ? t.opacity : undefined;
+    const opS = t.opacityScore !== undefined ? t.opacityScore : (opOld !== undefined ? opOld : d.opacityScore);
+    const opN = t.opacityNames !== undefined ? t.opacityNames : (opOld !== undefined ? opOld : d.opacityNames);
+    document.getElementById('tc-opacity-score').value = opS;
+    document.getElementById('tv-opacity-score').textContent = opS + '%';
+    document.getElementById('tc-opacity-names').value = opN;
+    document.getElementById('tv-opacity-names').textContent = opN + '%';
 
     window.updatePreview();
   }
