@@ -173,6 +173,20 @@
     }
     .reset-btn:active { background: #0e0e1a; }
 
+    /* CORNICE */
+    .frame-prev {
+      position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden;
+      border-radius: 8px; border: 1px solid var(--border);
+      background: linear-gradient(180deg, #2c3b4d 0%, #3b5a47 58%, #8b6b3c 100%);
+    }
+    .frame-prev-caption {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700;
+      letter-spacing: 0.08em; color: #ffffff66; pointer-events: none;
+    }
+    .frame-prev-hole { position: absolute; display: none; pointer-events: none; }
+    .frame-check { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
+
     /* TOAST */
     #toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
@@ -405,6 +419,99 @@
 
 <div class="divider"></div>
 
+<!-- CORNICE -->
+<div class="section">
+  <div class="section-title">Cornice</div>
+  <div class="theme-card">
+
+    <div class="frame-prev" id="frame-prev">
+      <div class="frame-prev-caption">immagine della diretta</div>
+      <div class="frame-prev-hole" id="frame-prev-hole"></div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">🖼 Cornice attiva</span>
+      <div class="ctrl-right">
+        <input type="checkbox" class="frame-check" id="tc-frame-on" onchange="updatePreview()">
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">🔗 Muovi i 4 lati insieme</span>
+      <div class="ctrl-right">
+        <input type="checkbox" class="frame-check" id="tc-frame-link">
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">⬆ Alto</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-frame-top" min="0" max="300" step="2" value="0"
+          oninput="frameSlide('top')">
+        <span class="slider-val" id="tv-frame-top">0px</span>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">⬇ Basso</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-frame-bottom" min="0" max="300" step="2" value="0"
+          oninput="frameSlide('bottom')">
+        <span class="slider-val" id="tv-frame-bottom">0px</span>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">⬅ Sinistra</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-frame-left" min="0" max="300" step="2" value="0"
+          oninput="frameSlide('left')">
+        <span class="slider-val" id="tv-frame-left">0px</span>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">➡ Destra</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-frame-right" min="0" max="300" step="2" value="0"
+          oninput="frameSlide('right')">
+        <span class="slider-val" id="tv-frame-right">0px</span>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">⚫ Colore cornice</span>
+      <div class="ctrl-right">
+        <input type="color" class="color-input" id="tc-frame-color" value="#000000"
+          oninput="syncHex('tc-frame-color','th-frame-color');updatePreview()">
+        <input type="text" class="hex-input" id="th-frame-color" value="#000000" maxlength="7"
+          oninput="syncColor('th-frame-color','tc-frame-color');updatePreview()">
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">◜ Angoli interni</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-frame-radius" min="0" max="80" step="2" value="0"
+          oninput="document.getElementById('tv-frame-radius').textContent=this.value+'px';updatePreview()">
+        <span class="slider-val" id="tv-frame-radius">0px</span>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">✏ Filetto</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-frame-line" min="0" max="10" step="1" value="0"
+          oninput="document.getElementById('tv-frame-line').textContent=this.value+'px';updatePreview()">
+        <span class="slider-val" id="tv-frame-line">0px</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
 <!-- RESET -->
 <div class="section">
   <button class="reset-btn" onclick="resetTheme()">↺ Ripristina tema predefinito</button>
@@ -474,8 +581,11 @@
   const DEFAULTS = {
     accent: '#f0a500', away: '#e53e3e', scoreBg: '#1a1a1a',
     teamText: '#ffffff', scoreText: '#1a1a1a', font: 'Barlow Condensed',
-    scoreSize: 48, nameSize: 28, sbHeight: 74, opacityScore: 100, opacityNames: 100
+    scoreSize: 48, nameSize: 28, sbHeight: 74, opacityScore: 100, opacityNames: 100,
+    frameOn: false, frameTop: 0, frameBottom: 0, frameLeft: 0, frameRight: 0,
+    frameRadius: 0, frameLine: 0, frameColor: '#000000'
   };
+  const FRAME_KEYS = ['frameOn','frameTop','frameBottom','frameLeft','frameRight','frameRadius','frameLine','frameColor'];
 
   const PRESETS = {
     classic: { accent:'#f0a500', away:'#e53e3e',  scoreBg:'#1a1a1a', teamText:'#ffffff', scoreText:'#1a1a1a' },
@@ -558,6 +668,39 @@
     // Ticker tag
     const tag = document.getElementById('prev-ticker-tag');
     tag.style.background = accent; tag.style.color = scoreText;
+
+    // Anteprima cornice (stessa tecnica dell'overlay, scalata dalla base 1920x1080)
+    const fbox  = document.getElementById('frame-prev');
+    const fhole = document.getElementById('frame-prev-hole');
+    if (fbox && fhole) {
+      if (document.getElementById('tc-frame-on').checked) {
+        const k  = fbox.clientWidth / 1920;
+        const gv = (id) => parseInt(document.getElementById(id).value) || 0;
+        const line = gv('tc-frame-line');
+        fhole.style.display = 'block';
+        fhole.style.top    = gv('tc-frame-top')    * k + 'px';
+        fhole.style.bottom = gv('tc-frame-bottom') * k + 'px';
+        fhole.style.left   = gv('tc-frame-left')   * k + 'px';
+        fhole.style.right  = gv('tc-frame-right')  * k + 'px';
+        fhole.style.borderRadius = gv('tc-frame-radius') * k + 'px';
+        const lineW = line > 0 ? Math.max(1, line * k) : 0;
+        fhole.style.boxShadow = '0 0 0 ' + lineW + 'px ' + accent + ', 0 0 0 2400px ' + document.getElementById('tc-frame-color').value;
+      } else {
+        fhole.style.display = 'none';
+      }
+    }
+  };
+  window.addEventListener('resize', () => window.updatePreview());
+
+  // Cornice: con "Muovi i 4 lati insieme" attivo, un lato trascina anche gli altri tre
+  window.frameSlide = function(side) {
+    const v = document.getElementById('tc-frame-' + side).value;
+    const sides = document.getElementById('tc-frame-link').checked ? ['top','bottom','left','right'] : [side];
+    sides.forEach(k => {
+      document.getElementById('tc-frame-' + k).value = v;
+      document.getElementById('tv-frame-' + k).textContent = v + 'px';
+    });
+    window.updatePreview();
   };
 
   // ── READ / WRITE DOM ────────────────────────────────────────────
@@ -574,6 +717,14 @@
       sbHeight:  parseInt(document.getElementById('tc-sbheight').value),
       opacityScore: parseInt(document.getElementById('tc-opacity-score').value),
       opacityNames: parseInt(document.getElementById('tc-opacity-names').value),
+      frameOn:     document.getElementById('tc-frame-on').checked,
+      frameTop:    parseInt(document.getElementById('tc-frame-top').value),
+      frameBottom: parseInt(document.getElementById('tc-frame-bottom').value),
+      frameLeft:   parseInt(document.getElementById('tc-frame-left').value),
+      frameRight:  parseInt(document.getElementById('tc-frame-right').value),
+      frameRadius: parseInt(document.getElementById('tc-frame-radius').value),
+      frameLine:   parseInt(document.getElementById('tc-frame-line').value),
+      frameColor:  document.getElementById('tc-frame-color').value,
     };
   }
 
@@ -612,6 +763,15 @@
     document.getElementById('tc-opacity-names').value = opN;
     document.getElementById('tv-opacity-names').textContent = opN + '%';
 
+    // cornice
+    document.getElementById('tc-frame-on').checked = (t.frameOn === true);
+    [['top','frameTop'],['bottom','frameBottom'],['left','frameLeft'],['right','frameRight'],['radius','frameRadius'],['line','frameLine']].forEach(([k, key]) => {
+      const v = t[key] !== undefined ? t[key] : d[key];
+      document.getElementById('tc-frame-' + k).value = v;
+      document.getElementById('tv-frame-' + k).textContent = v + 'px';
+    });
+    sc('tc-frame-color', 'th-frame-color', t.frameColor || d.frameColor);
+
     window.updatePreview();
   }
 
@@ -642,8 +802,12 @@
   window.resetTheme = function() {
     if (!auth.currentUser) { alert('Devi fare il login prima.'); return; }
     if (!confirm('Ripristinare il tema predefinito?')) return;
-    writeToDom(DEFAULTS);
-    set(themeRef, DEFAULTS);
+    // la cornice dipende dall'inquadratura, non dallo stile: il ripristino la lascia com'è
+    const cur = readFromDOM();
+    const base = { ...DEFAULTS };
+    FRAME_KEYS.forEach(k => { base[k] = cur[k]; });
+    writeToDom(base);
+    set(themeRef, base);
     toast('Tema predefinito ripristinato');
   };
 

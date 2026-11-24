@@ -20,6 +20,19 @@
     --ov-sb-height:  74px;
     --ov-op-names:   1;
     --ov-op-score:   1;
+    --fr-top: 0px; --fr-right: 0px; --fr-bottom: 0px; --fr-left: 0px;
+    --fr-radius: 0px; --fr-line: 0px; --fr-color: #000000;
+  }
+
+  /* CORNICE: copre i bordi dell'immagine della diretta (si regola da tema.html).
+     Sta sotto a tutti gli altri elementi dell'overlay: punteggio, news e sponsor restano visibili sopra. */
+  #frame { position: absolute; inset: 0; display: none; pointer-events: none; overflow: hidden; }
+  #frame.on { display: block; }
+  #frame-hole {
+    position: absolute;
+    top: var(--fr-top); right: var(--fr-right); bottom: var(--fr-bottom); left: var(--fr-left);
+    border-radius: var(--fr-radius);
+    box-shadow: 0 0 0 var(--fr-line) var(--ov-accent), 0 0 0 2400px var(--fr-color);
   }
 
   /* COMPETITION */
@@ -336,6 +349,8 @@
 </head>
 <body>
 
+<div id="frame"><div id="frame-hole"></div></div>
+
 <div id="competition">
   <span class="comp-label" id="comp-label-el">Eccellenza FIPAV</span>
   <span class="comp-name"  id="comp-name-el">Finale 3° - 4° Posto</span>
@@ -598,6 +613,18 @@
       if (setsBg)   s.setProperty('--ov-sets-bg',   setsBg);
       s.setProperty('--ov-op-names', opN);
       s.setProperty('--ov-op-score', opS);
+    }
+    // Cornice regolabile (px su base 1920x1080). Spenta se frameOn non è true.
+    {
+      const px = (v, max) => Math.max(0, Math.min(max, parseInt(v, 10) || 0)) + 'px';
+      s.setProperty('--fr-top',    px(t.frameTop,    400));
+      s.setProperty('--fr-right',  px(t.frameRight,  400));
+      s.setProperty('--fr-bottom', px(t.frameBottom, 400));
+      s.setProperty('--fr-left',   px(t.frameLeft,   400));
+      s.setProperty('--fr-radius', px(t.frameRadius, 120));
+      s.setProperty('--fr-line',   px(t.frameLine,   16));
+      s.setProperty('--fr-color',  /^#[0-9a-f]{6}$/i.test(t.frameColor || '') ? t.frameColor : '#000000');
+      document.getElementById('frame').classList.toggle('on', t.frameOn === true);
     }
   }
   onValue(ref(db, 'theme'), (snap) => { applyTheme(snap.val()); });
