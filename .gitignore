@@ -1,0 +1,21 @@
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+
+# Segreti e configurazioni locali
+.env
+.env.*
+*.local
+
+# Node (se in futuro aggiungi strumenti di build)
+node_modules/
+
+# Log e file temporanei
+*.log
+*.tmp
