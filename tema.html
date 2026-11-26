@@ -97,9 +97,9 @@
     .ctrl-label {
       font-family: 'Barlow Condensed', sans-serif; font-size: 13px;
       font-weight: 700; letter-spacing: 0.08em; color: var(--muted);
-      text-transform: uppercase; flex: 1; white-space: nowrap;
+      text-transform: uppercase; flex: 1; white-space: normal; min-width: 0; line-height: 1.2;
     }
-    .ctrl-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .ctrl-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; max-width: 62%; }
 
     /* COLOR PICKER */
     .color-input {
@@ -122,7 +122,7 @@
     .slider {
       flex: 1; accent-color: var(--accent); cursor: pointer;
       height: 4px; -webkit-appearance: none; appearance: none;
-      background: #333; border-radius: 2px; outline: none;
+      background: #333; border-radius: 2px; outline: none; min-width: 0; width: 100%;
     }
     .slider::-webkit-slider-thumb {
       -webkit-appearance: none; width: 20px; height: 20px;
@@ -130,7 +130,7 @@
     }
     .slider-val {
       font-family: 'Barlow Condensed', sans-serif; font-size: 15px;
-      font-weight: 900; color: var(--accent); min-width: 40px; text-align: right;
+      font-weight: 900; color: var(--accent); min-width: 46px; text-align: right; flex-shrink: 0;
     }
 
     /* SELECT */
@@ -188,9 +188,6 @@
     .frame-check { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
     /* COMPETIZIONE E SPONSOR: le etichette vanno a capo invece di spingere i controlli fuori dalla scheda */
-    .wrap-card .ctrl-label { white-space: normal; min-width: 0; }
-    .wrap-card .slider { min-width: 0; width: 100%; }
-    .wrap-card .slider-val { min-width: 46px; }
 
     /* POSIZIONI E ADATTAMENTO */
     .lay-hint { padding: 10px 14px 12px; font-size: 13px; line-height: 1.45; color: var(--muted); border-bottom: 1px solid #222; }
@@ -208,8 +205,6 @@
     .lay-sum { font-size: 12px; font-weight: 900; color: var(--accent); letter-spacing: 0.04em; text-align: right; }
     .lay-item .ctrl-row { padding-left: 24px; }
     .lay-item .ctrl-label { flex: 0 0 auto; }
-    .lay-item .slider { min-width: 0; width: 100%; }
-    .lay-item .slider-val { min-width: 46px; }
     .lay-btns { display: flex; gap: 8px; padding: 12px 14px; flex-wrap: wrap; }
     .mini-btn {
       flex: 1; min-width: 150px; padding: 11px 10px; border-radius: 8px;
