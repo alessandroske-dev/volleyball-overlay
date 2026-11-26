@@ -30,6 +30,8 @@
     --ad-x: 0px;   --ad-y: 0px;   --ad-s: 1;
     --sc-x: 0px;   --sc-y: 0px;   --sc-s: 1;
     --pc-x: 0px;   --pc-y: 0px;
+    /* Competizione e sponsor: opacità del blocco (0-1) e colore del testo della competizione, dal tema */
+    --comp-op: 1;  --sp-op: 1;  --comp-color: #ffffff;
     /* Larghezza/altezza di riferimento della scena: se la scena viene adattata alla finestra valgono 1920px/1080px (le imposta lo script) */
     --sw: 100vw;   --sh: 100vh;
   }
@@ -46,9 +48,9 @@
   }
 
   /* COMPETITION */
-  #competition { position: absolute; top: 32px; left: 40px; transform-origin: 0 0; transform: translate(var(--comp-x), var(--comp-y)) scale(var(--comp-s)); animation: slideIn 0.6s ease both; }
-  .comp-label { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: #ffffff; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,0.9); display: block; }
-  .comp-name  { font-size: 24px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; text-shadow: 0 2px 14px rgba(0,0,0,0.95); display: block; }
+  #competition { position: absolute; top: 32px; left: 40px; opacity: var(--comp-op); transform-origin: 0 0; transform: translate(var(--comp-x), var(--comp-y)) scale(var(--comp-s)); animation: slideIn 0.6s ease both; }
+  .comp-label { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: var(--comp-color); text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,0.9); display: block; }
+  .comp-name  { font-size: 24px; font-weight: 900; color: var(--comp-color); text-transform: uppercase; letter-spacing: 0.05em; text-shadow: 0 2px 14px rgba(0,0,0,0.95); display: block; }
 
   /* SPONSOR BANNER */
   #sponsor {
@@ -58,6 +60,7 @@
     display: none; align-items: center; justify-content: center;
     max-width: 300px; min-width: 120px; max-height: 120px;
     box-shadow: 0 4px 28px rgba(0,0,0,0.55);
+    opacity: var(--sp-op);
     transform-origin: 100% 0; transform: translate(var(--sp-x), var(--sp-y)) scale(var(--sp-s));
     animation: fadeIn 0.4s ease both;
   }
@@ -233,8 +236,8 @@
   .scout-pct.home { color: var(--ov-accent); text-align: left; }
   .scout-pct.away { color: var(--ov-away); text-align: right; }
 
-  @keyframes slideIn { from { opacity: 0; transform: translate(calc(var(--comp-x) - 24px), var(--comp-y)) scale(var(--comp-s)); } to { opacity: 1; transform: translate(var(--comp-x), var(--comp-y)) scale(var(--comp-s)); } }
-  @keyframes fadeIn  { from { opacity: 0; transform: translate(var(--sp-x), var(--sp-y)) scale(calc(var(--sp-s) * 0.9)); } to { opacity: 1; transform: translate(var(--sp-x), var(--sp-y)) scale(var(--sp-s)); } }
+  @keyframes slideIn { from { opacity: 0; transform: translate(calc(var(--comp-x) - 24px), var(--comp-y)) scale(var(--comp-s)); } to { opacity: var(--comp-op); transform: translate(var(--comp-x), var(--comp-y)) scale(var(--comp-s)); } }
+  @keyframes fadeIn  { from { opacity: 0; transform: translate(var(--sp-x), var(--sp-y)) scale(calc(var(--sp-s) * 0.9)); } to { opacity: var(--sp-op); transform: translate(var(--sp-x), var(--sp-y)) scale(var(--sp-s)); } }
 
   /* AD BANNER — carosello multi-slide */
   #ad-banner {
@@ -671,6 +674,13 @@
       if (setsBg)   s.setProperty('--ov-sets-bg',   setsBg);
       s.setProperty('--ov-op-names', opN);
       s.setProperty('--ov-op-score', opS);
+    }
+    // Competizione e sponsor in alto a destra: opacità del blocco (10-100, senza valore = 100) e colore del testo della competizione
+    {
+      const pct = v => { v = parseInt(v, 10); return (isFinite(v) ? Math.max(10, Math.min(100, v)) : 100) / 100; };
+      s.setProperty('--comp-op', pct(t.opacityComp));
+      s.setProperty('--sp-op',   pct(t.opacitySponsor));
+      s.setProperty('--comp-color', /^#[0-9a-f]{6}$/i.test(t.compColor || '') ? t.compColor : '#ffffff');
     }
     // Cornice regolabile (px su base 1920x1080). Spenta se frameOn non è true.
     {

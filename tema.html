@@ -187,6 +187,11 @@
     .frame-prev-hole { position: absolute; display: none; pointer-events: none; }
     .frame-check { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
+    /* COMPETIZIONE E SPONSOR: le etichette vanno a capo invece di spingere i controlli fuori dalla scheda */
+    .wrap-card .ctrl-label { white-space: normal; min-width: 0; }
+    .wrap-card .slider { min-width: 0; width: 100%; }
+    .wrap-card .slider-val { min-width: 46px; }
+
     /* POSIZIONI E ADATTAMENTO */
     .lay-hint { padding: 10px 14px 12px; font-size: 13px; line-height: 1.45; color: var(--muted); border-bottom: 1px solid #222; }
     .lay-hint code { color: var(--text); background: #222; padding: 1px 5px; border-radius: 4px; }
@@ -446,6 +451,44 @@
 
 <div class="divider"></div>
 
+<!-- COMPETIZIONE E SPONSOR -->
+<div class="section">
+  <div class="section-title">Competizione e sponsor (in alto)</div>
+  <div class="theme-card wrap-card">
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">🏆 Colore competizione</span>
+      <div class="ctrl-right">
+        <input type="color" class="color-input" id="tc-compcolor" value="#ffffff"
+          oninput="syncHex('tc-compcolor','th-compcolor')">
+        <input type="text" class="hex-input" id="th-compcolor" value="#ffffff" maxlength="7"
+          oninput="syncColor('th-compcolor','tc-compcolor')">
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">🌫 Opacità competizione</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-opacity-comp" min="10" max="100" step="1" value="100"
+          oninput="document.getElementById('tv-opacity-comp').textContent=this.value+'%'">
+        <span class="slider-val" id="tv-opacity-comp">100%</span>
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">🌫 Opacità sponsor</span>
+      <div class="slider-wrap">
+        <input type="range" class="slider" id="tc-opacity-sponsor" min="10" max="100" step="1" value="100"
+          oninput="document.getElementById('tv-opacity-sponsor').textContent=this.value+'%'">
+        <span class="slider-val" id="tv-opacity-sponsor">100%</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
 <!-- CORNICE -->
 <div class="section">
   <div class="section-title">Cornice</div>
@@ -653,6 +696,7 @@
     accent: '#f0a500', away: '#e53e3e', scoreBg: '#1a1a1a',
     teamText: '#ffffff', scoreText: '#1a1a1a', font: 'Barlow Condensed',
     scoreSize: 48, nameSize: 28, sbHeight: 74, opacityScore: 100, opacityNames: 100,
+    compColor: '#ffffff', opacityComp: 100, opacitySponsor: 100,
     frameOn: false, frameTop: 0, frameBottom: 0, frameLeft: 0, frameRight: 0,
     frameRadius: 0, frameLine: 0, frameColor: '#000000'
   };
@@ -788,6 +832,9 @@
       sbHeight:  parseInt(document.getElementById('tc-sbheight').value),
       opacityScore: parseInt(document.getElementById('tc-opacity-score').value),
       opacityNames: parseInt(document.getElementById('tc-opacity-names').value),
+      compColor:      document.getElementById('tc-compcolor').value,
+      opacityComp:    parseInt(document.getElementById('tc-opacity-comp').value),
+      opacitySponsor: parseInt(document.getElementById('tc-opacity-sponsor').value),
       frameOn:     document.getElementById('tc-frame-on').checked,
       frameTop:    parseInt(document.getElementById('tc-frame-top').value),
       frameBottom: parseInt(document.getElementById('tc-frame-bottom').value),
@@ -833,6 +880,14 @@
     document.getElementById('tv-opacity-score').textContent = opS + '%';
     document.getElementById('tc-opacity-names').value = opN;
     document.getElementById('tv-opacity-names').textContent = opN + '%';
+
+    // competizione e sponsor
+    sc('tc-compcolor', 'th-compcolor', t.compColor || d.compColor);
+    [['comp', 'opacityComp'], ['sponsor', 'opacitySponsor']].forEach(([k, key]) => {
+      const v = t[key] !== undefined ? t[key] : d[key];
+      document.getElementById('tc-opacity-' + k).value = v;
+      document.getElementById('tv-opacity-' + k).textContent = document.getElementById('tc-opacity-' + k).value + '%';
+    });
 
     // cornice
     document.getElementById('tc-frame-on').checked = (t.frameOn === true);
