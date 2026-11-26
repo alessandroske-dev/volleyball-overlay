@@ -338,7 +338,7 @@
      (come in Prism). Tutto dentro la scheda è in "em", quindi si ridimensiona insieme a lei. */
   #pres-card {
     --pc-h: min(820px, calc(var(--sh) - 150px - var(--ov-sb-height) - var(--sh) * 0.035));
-    position: absolute; left: calc(var(--sw) * 0.032 + var(--pc-x)); bottom: calc(40px + var(--ov-sb-height) + var(--sh) * 0.035 - var(--pc-y));
+    position: absolute; left: calc(var(--sw) * 0.032 + max(var(--pc-x), -60px)); bottom: calc(40px + var(--ov-sb-height) + var(--sh) * 0.035 - var(--pc-y));
     height: var(--pc-h); width: calc(var(--pc-h) * 0.8); font-size: calc(var(--pc-h) / 20);
     display: flex; flex-direction: column;
     background: var(--ov-score-bg); border: 0.16em solid var(--ov-accent); border-radius: 1em;
@@ -357,7 +357,7 @@
   #pres-card .pc-name { font-size: 1.04em; font-weight: 700; line-height: 1.15; color: #dbe6ff; white-space: nowrap; overflow: hidden; }
   #pres-card .pc-role { display: inline-block; margin-top: 0.3em; background: var(--ov-accent); color: var(--ov-score-text); font-size: 0.77em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 999px; padding: 0.1em 0.6em; }
   /* lato destro (partite fuori casa): la scheda va sul lato del nome della squadra ospite; più bassa per non toccare lo sponsor in alto a destra */
-  #pres-card.right { left: auto; right: calc(var(--sw) * 0.032 - var(--pc-x)); transform: translateX(30px); --pc-h: min(820px, calc(var(--sh) - 190px - var(--ov-sb-height) - var(--sh) * 0.035)); }
+  #pres-card.right { left: auto; right: calc(var(--sw) * 0.032 - min(var(--pc-x), 60px)); transform: translateX(30px); --pc-h: min(820px, calc(var(--sh) - 190px - var(--ov-sb-height) - var(--sh) * 0.035)); }
   #pres-card.right.in { transform: translateX(0); }
 </style>
 </head>
@@ -600,7 +600,11 @@
   // Adattamento: se la finestra è diversa da 1920x1080 (es. la sorgente web di Prism) la scena viene scalata e centrata.
   const PROFILE = ((new URLSearchParams(location.search).get('profilo') || 'default').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 20)) || 'default';
   const LAYOUT_ITEMS = ['sb', 'comp', 'sp', 'tk', 'ad', 'sc', 'pc'];
-  let fitOn = true;
+  // Limiti di spostamento [xMin, xMax, yMin, yMax] in px: ogni blocco resta nello schermo (il lato ancorato non può uscire dal bordo).
+  const LIM = { sb: [-500, 500, -900, 40], comp: [-40, 1200, -32, 800], sp: [-1200, 40, -28, 800], tk: [-500, 500, -900, 4], ad: [-500, 500, -900, 124], sc: [-700, 700, -400, 400], pc: [-600, 600, -700, 150] };
+  // Via di fuga: overlay.html?layout=0 ignora profili e adattamento (comportamento di prima).
+  const NOLAYOUT = new URLSearchParams(location.search).get('layout') === '0';
+  let fitOn = !NOLAYOUT;
   function fitStage() {
     const b = document.body.style;
     const k = Math.min(innerWidth / 1920, innerHeight / 1080);
@@ -624,12 +628,13 @@
     const s = document.body.style;
     const n = (v, d, lo, hi) => { v = Number(v); if (!isFinite(v)) v = d; return Math.min(hi, Math.max(lo, v)); };
     LAYOUT_ITEMS.forEach(k => {
-      const it = items[k] || {};
-      s.setProperty('--' + k + '-x', n(it.x, 0, -1920, 1920) + 'px');
-      s.setProperty('--' + k + '-y', n(it.y, 0, -1080, 1080) + 'px');
+      const it = NOLAYOUT ? {} : (items[k] || {});
+      const m = LIM[k];
+      s.setProperty('--' + k + '-x', n(it.x, 0, m[0], m[1]) + 'px');
+      s.setProperty('--' + k + '-y', n(it.y, 0, m[2], m[3]) + 'px');
       s.setProperty('--' + k + '-s', n(it.s, 100, 30, 300) / 100);
     });
-    fitOn = L.fit !== false;
+    fitOn = !NOLAYOUT && L.fit !== false;
     fitStage();
   }
 

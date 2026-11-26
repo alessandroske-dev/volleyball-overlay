@@ -867,13 +867,14 @@
   // Ogni profilo (Predefinito, Prism Live, OBS) ha le sue posizioni, salvate in theme/profiles/<profilo>.
   // L'overlay usa il profilo indicato nel link (?profilo=prism); se il profilo non è mai stato salvato usa il Predefinito.
   const LAYOUT_ITEMS = [
-    ['sb',   '📊 Segnapunti',                  true],
-    ['comp', '🏆 Competizione',                true],
-    ['sp',   '🏷 Sponsor in alto a destra',    true],
-    ['tk',   '📢 Notizie (striscia in basso)', true],
-    ['ad',   '📣 Banner pubblicitario',        true],
-    ['sc',   '📈 Statistiche partita',         true],
-    ['pc',   '👤 Scheda giocatrice',           false]   // solo spostamento
+    // [sigla, nome, ha la dimensione, [xMin, xMax, yMin, yMax]]: i limiti tengono il blocco dentro lo schermo (gli stessi usa l'overlay)
+    ['sb',   '📊 Segnapunti',                  true,  [-500, 500, -900, 40]],
+    ['comp', '🏆 Competizione',                true,  [-40, 1200, -32, 800]],
+    ['sp',   '🏷 Sponsor in alto a destra',    true,  [-1200, 40, -28, 800]],
+    ['tk',   '📢 Notizie (striscia in basso)', true,  [-500, 500, -900, 4]],
+    ['ad',   '📣 Banner pubblicitario',        true,  [-500, 500, -900, 124]],
+    ['sc',   '📈 Statistiche partita',         true,  [-700, 700, -400, 400]],
+    ['pc',   '👤 Scheda giocatrice',           false, [-600, 600, -700, 150]]   // solo spostamento
   ];
   let profilesMem = {};        // profili come sono su Firebase, aggiornati a ogni cambio profilo e salvataggio
   let curProfile  = 'default';
@@ -884,11 +885,12 @@
     '<div class="slider-wrap"><input type="range" class="slider" id="tl-' + k + '-' + a + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" oninput="layoutSlide()">' +
     '<span class="slider-val" id="tv-l-' + k + '-' + a + '">' + val + unit + '</span></div></div>';
 
-  document.getElementById('tl-items').innerHTML = LAYOUT_ITEMS.map(([k, label, hasScale]) =>
+  document.getElementById('tl-items').innerHTML = LAYOUT_ITEMS.map(([k, label, hasScale, lim]) =>
     '<details class="lay-item" id="tl-d-' + k + '"><summary><span>' + label + '</span><span class="lay-sum" id="tl-sum-' + k + '">invariato</span></summary>' +
-    slRow(k, 'x', '↔ Orizzontale', -600, 600, 2, 0, 'px') +
-    slRow(k, 'y', '↕ Verticale',   -400, 400, 2, 0, 'px') +
+    slRow(k, 'x', '↔ Orizzontale', lim[0], lim[1], 2, 0, 'px') +
+    slRow(k, 'y', '↕ Verticale',   lim[2], lim[3], 2, 0, 'px') +
     (hasScale ? slRow(k, 's', '🔍 Dimensione', 50, 200, 1, 100, '%') : '') +
+    '<div class="lay-btns"><button class="mini-btn" onclick="layoutResetItem(\'' + k + '\')">Azzera questo blocco</button></div>' +
     '</details>').join('');
 
   const clampN = (v, lo, hi, d) => { v = Number(v); if (!isFinite(v)) v = d; return Math.min(hi, Math.max(lo, v)); };
@@ -924,10 +926,10 @@
     L = L || {};
     const items = (L.items && typeof L.items === 'object') ? L.items : {};
     document.getElementById('tl-fit').checked = (L.fit !== false);
-    LAYOUT_ITEMS.forEach(([k, , hasScale]) => {
+    LAYOUT_ITEMS.forEach(([k, , hasScale, lim]) => {
       const it = items[k] || {};
-      setSl(k, 'x', clampN(it.x, -600, 600, 0), 'px');
-      setSl(k, 'y', clampN(it.y, -400, 400, 0), 'px');
+      setSl(k, 'x', clampN(it.x, lim[0], lim[1], 0), 'px');
+      setSl(k, 'y', clampN(it.y, lim[2], lim[3], 0), 'px');
       if (hasScale) setSl(k, 's', clampN(it.s, 50, 200, 100), '%');
     });
     layoutSummaries();
@@ -935,7 +937,7 @@
 
   function layoutHint() {
     const el = document.getElementById('tl-hint');
-    let h = 'Orizzontale: − sinistra, + destra. Verticale: − su, + giù. «Adatta alla finestra» riduce tutto in proporzione se la sorgente web è più piccola di 1920×1080. ';
+    let h = 'Orizzontale: − sinistra, + destra. Verticale: − su, + giù. «Adatta alla finestra» riduce tutto in proporzione se la sorgente web è più piccola di 1920×1080. Ogni blocco può muoversi solo finché resta dentro lo schermo. ';
     if (curProfile === 'default') {
       h += 'Il Predefinito vale per ogni link senza profilo e per i profili ancora vuoti.';
     } else {
@@ -966,6 +968,12 @@
     });
     layoutSummaries();
     layoutSendLive();
+  };
+
+  window.layoutResetItem = function(k) {
+    setSl(k, 'x', 0, 'px'); setSl(k, 'y', 0, 'px');
+    if (document.getElementById('tl-' + k + '-s')) setSl(k, 's', 100, '%');
+    window.layoutSlide();
   };
 
   window.layoutProfileChange = function() {
