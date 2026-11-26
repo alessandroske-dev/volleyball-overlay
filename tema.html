@@ -187,6 +187,33 @@
     .frame-prev-hole { position: absolute; display: none; pointer-events: none; }
     .frame-check { width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; }
 
+    /* POSIZIONI E ADATTAMENTO */
+    .lay-hint { padding: 10px 14px 12px; font-size: 13px; line-height: 1.45; color: var(--muted); border-bottom: 1px solid #222; }
+    .lay-hint code { color: var(--text); background: #222; padding: 1px 5px; border-radius: 4px; }
+    .lay-hint .warn { color: #f0a500; }
+    .lay-item { border-bottom: 1px solid #222; }
+    .lay-item > summary {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 12px 14px; cursor: pointer; list-style: none;
+      font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700;
+      letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase;
+    }
+    .lay-item > summary::-webkit-details-marker { display: none; }
+    .lay-item[open] > summary { color: var(--text); }
+    .lay-sum { font-size: 12px; font-weight: 900; color: var(--accent); letter-spacing: 0.04em; text-align: right; }
+    .lay-item .ctrl-row { padding-left: 24px; }
+    .lay-item .ctrl-label { flex: 0 0 auto; }
+    .lay-item .slider { min-width: 0; width: 100%; }
+    .lay-item .slider-val { min-width: 46px; }
+    .lay-btns { display: flex; gap: 8px; padding: 12px 14px; flex-wrap: wrap; }
+    .mini-btn {
+      flex: 1; min-width: 150px; padding: 11px 10px; border-radius: 8px;
+      border: 1px solid var(--border); background: #222; color: var(--text);
+      font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+    }
+    .mini-btn:active { background: #2d2d2d; }
+
     /* TOAST */
     #toast {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
@@ -512,6 +539,50 @@
 
 <div class="divider"></div>
 
+<!-- POSIZIONI E ADATTAMENTO -->
+<div class="section">
+  <div class="section-title">Posizioni e adattamento</div>
+  <div class="theme-card">
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">📱 Profilo</span>
+      <div class="ctrl-right">
+        <select class="font-select" id="tl-profile" onchange="layoutProfileChange()">
+          <option value="default">Predefinito</option>
+          <option value="prism">Prism Live</option>
+          <option value="obs">OBS</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="lay-hint" id="tl-hint"></div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">📐 Adatta alla finestra</span>
+      <div class="ctrl-right">
+        <input type="checkbox" class="frame-check" id="tl-fit" checked onchange="layoutSlide()">
+      </div>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">⚡ Invia subito all'overlay</span>
+      <div class="ctrl-right">
+        <input type="checkbox" class="frame-check" id="tl-live">
+      </div>
+    </div>
+
+    <div id="tl-items"></div>
+
+    <div class="lay-btns">
+      <button class="mini-btn" onclick="layoutCopyFromDefault()">Copia dal Predefinito</button>
+      <button class="mini-btn" onclick="layoutResetProfile()">Azzera questo profilo</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="divider"></div>
+
 <!-- RESET -->
 <div class="section">
   <button class="reset-btn" onclick="resetTheme()">↺ Ripristina tema predefinito</button>
@@ -772,6 +843,14 @@
     });
     sc('tc-frame-color', 'th-frame-color', t.frameColor || d.frameColor);
 
+    // posizioni: solo se il tema arriva da Firebase con i profili (preset e anteprime non le toccano)
+    if (t.profiles && typeof t.profiles === 'object') {
+      profilesMem = JSON.parse(JSON.stringify(t.profiles));
+      layoutToDOM(profilesMem[curProfile] || profilesMem['default']);
+      curTouched = false;
+      layoutHint();
+    }
+
     window.updatePreview();
   }
 
@@ -784,11 +863,158 @@
     toast('Preset ' + name + ' applicato');
   };
 
+  // ── POSIZIONI E ADATTAMENTO (profili) ────────────────────────────
+  // Ogni profilo (Predefinito, Prism Live, OBS) ha le sue posizioni, salvate in theme/profiles/<profilo>.
+  // L'overlay usa il profilo indicato nel link (?profilo=prism); se il profilo non è mai stato salvato usa il Predefinito.
+  const LAYOUT_ITEMS = [
+    ['sb',   '📊 Segnapunti',                  true],
+    ['comp', '🏆 Competizione',                true],
+    ['sp',   '🏷 Sponsor in alto a destra',    true],
+    ['tk',   '📢 Notizie (striscia in basso)', true],
+    ['ad',   '📣 Banner pubblicitario',        true],
+    ['sc',   '📈 Statistiche partita',         true],
+    ['pc',   '👤 Scheda giocatrice',           false]   // solo spostamento
+  ];
+  let profilesMem = {};        // profili come sono su Firebase, aggiornati a ogni cambio profilo e salvataggio
+  let curProfile  = 'default';
+  let curTouched  = false;     // true se il profilo aperto è stato modificato da quando l'ho caricato
+
+  const slRow = (k, a, label, min, max, step, val, unit) =>
+    '<div class="ctrl-row"><span class="ctrl-label">' + label + '</span>' +
+    '<div class="slider-wrap"><input type="range" class="slider" id="tl-' + k + '-' + a + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" oninput="layoutSlide()">' +
+    '<span class="slider-val" id="tv-l-' + k + '-' + a + '">' + val + unit + '</span></div></div>';
+
+  document.getElementById('tl-items').innerHTML = LAYOUT_ITEMS.map(([k, label, hasScale]) =>
+    '<details class="lay-item" id="tl-d-' + k + '"><summary><span>' + label + '</span><span class="lay-sum" id="tl-sum-' + k + '">invariato</span></summary>' +
+    slRow(k, 'x', '↔ Orizzontale', -600, 600, 2, 0, 'px') +
+    slRow(k, 'y', '↕ Verticale',   -400, 400, 2, 0, 'px') +
+    (hasScale ? slRow(k, 's', '🔍 Dimensione', 50, 200, 1, 100, '%') : '') +
+    '</details>').join('');
+
+  const clampN = (v, lo, hi, d) => { v = Number(v); if (!isFinite(v)) v = d; return Math.min(hi, Math.max(lo, v)); };
+  const gi = (id, d) => { const v = parseInt(document.getElementById(id).value); return isFinite(v) ? v : d; };
+
+  function setSl(k, a, v, unit) {
+    document.getElementById('tl-' + k + '-' + a).value = v;
+    document.getElementById('tv-l-' + k + '-' + a).textContent = v + unit;
+  }
+
+  function layoutFromDOM() {
+    const items = {};
+    LAYOUT_ITEMS.forEach(([k, , hasScale]) => {
+      const x = gi('tl-' + k + '-x', 0), y = gi('tl-' + k + '-y', 0);
+      const s = hasScale ? gi('tl-' + k + '-s', 100) : 100;
+      if (x !== 0 || y !== 0 || s !== 100) items[k] = hasScale ? { x, y, s } : { x, y };
+    });
+    return { fit: document.getElementById('tl-fit').checked, items };
+  }
+
+  function layoutSummaries() {
+    LAYOUT_ITEMS.forEach(([k, , hasScale]) => {
+      const x = gi('tl-' + k + '-x', 0), y = gi('tl-' + k + '-y', 0), s = hasScale ? gi('tl-' + k + '-s', 100) : 100;
+      const parts = [];
+      if (x !== 0) parts.push('x ' + x);
+      if (y !== 0) parts.push('y ' + y);
+      if (s !== 100) parts.push(s + '%');
+      document.getElementById('tl-sum-' + k).textContent = parts.length ? parts.join(', ') : 'invariato';
+    });
+  }
+
+  function layoutToDOM(L) {
+    L = L || {};
+    const items = (L.items && typeof L.items === 'object') ? L.items : {};
+    document.getElementById('tl-fit').checked = (L.fit !== false);
+    LAYOUT_ITEMS.forEach(([k, , hasScale]) => {
+      const it = items[k] || {};
+      setSl(k, 'x', clampN(it.x, -600, 600, 0), 'px');
+      setSl(k, 'y', clampN(it.y, -400, 400, 0), 'px');
+      if (hasScale) setSl(k, 's', clampN(it.s, 50, 200, 100), '%');
+    });
+    layoutSummaries();
+  }
+
+  function layoutHint() {
+    const el = document.getElementById('tl-hint');
+    let h = 'Orizzontale: − sinistra, + destra. Verticale: − su, + giù. «Adatta alla finestra» riduce tutto in proporzione se la sorgente web è più piccola di 1920×1080. ';
+    if (curProfile === 'default') {
+      h += 'Il Predefinito vale per ogni link senza profilo e per i profili ancora vuoti.';
+    } else {
+      h += 'Nel link dell\u2019overlay aggiungi <code>?profilo=' + curProfile + '</code> (o <code>&amp;profilo=' + curProfile + '</code> se c\u2019è già un ?).';
+      if (!profilesMem[curProfile]) h += ' <span class="warn">Profilo non ancora salvato: finché non lo salvi l\u2019overlay usa il Predefinito.</span>';
+    }
+    el.innerHTML = h;
+  }
+
+  let liveTimer = null;
+  function layoutSendLive() {
+    if (!document.getElementById('tl-live').checked || !auth.currentUser) return;
+    clearTimeout(liveTimer);
+    liveTimer = setTimeout(() => {
+      const L = layoutFromDOM();
+      profilesMem[curProfile] = L;
+      curTouched = false;
+      set(ref(db, 'theme/profiles/' + curProfile), L).then(layoutHint).catch(e => toast('Invio non riuscito'));
+    }, 250);
+  }
+
+  window.layoutSlide = function() {
+    curTouched = true;
+    LAYOUT_ITEMS.forEach(([k, , hasScale]) => {
+      document.getElementById('tv-l-' + k + '-x').textContent = gi('tl-' + k + '-x', 0) + 'px';
+      document.getElementById('tv-l-' + k + '-y').textContent = gi('tl-' + k + '-y', 0) + 'px';
+      if (hasScale) document.getElementById('tv-l-' + k + '-s').textContent = gi('tl-' + k + '-s', 100) + '%';
+    });
+    layoutSummaries();
+    layoutSendLive();
+  };
+
+  window.layoutProfileChange = function() {
+    if (curTouched || profilesMem[curProfile]) profilesMem[curProfile] = layoutFromDOM();   // conserva quello che stavo regolando
+    curProfile = document.getElementById('tl-profile').value;
+    curTouched = false;
+    layoutToDOM(profilesMem[curProfile] || profilesMem['default']);   // profilo mai salvato: parte dai valori del Predefinito
+    layoutHint();
+  };
+
+  window.layoutCopyFromDefault = function() {
+    if (curProfile === 'default') { toast('Sei già sul Predefinito'); return; }
+    if (!profilesMem['default']) { toast('Il Predefinito è ancora vuoto'); return; }
+    layoutToDOM(JSON.parse(JSON.stringify(profilesMem['default'])));
+    curTouched = true;
+    layoutSendLive();
+    toast('Copiato dal Predefinito');
+  };
+
+  window.layoutResetProfile = function() {
+    if (!confirm('Azzerare le posizioni di questo profilo?')) return;
+    layoutToDOM({ fit: true });
+    curTouched = true;
+    layoutSendLive();
+    toast('Profilo azzerato');
+  };
+
+  // profili da scrivere su Firebase: quelli noti + quello aperto, se l'ho modificato o esiste già
+  function profilesForSave() {
+    const out = { ...profilesMem };
+    if (curTouched || profilesMem[curProfile]) out[curProfile] = layoutFromDOM();
+    profilesMem = out;
+    curTouched = false;
+    return out;
+  }
+  function fullTheme(base) {
+    const pr = profilesForSave();
+    if (Object.keys(pr).length) base.profiles = pr;
+    return base;
+  }
+  layoutToDOM({});
+  layoutHint();
+
   // ── SALVA ───────────────────────────────────────────────────────
   btnSaveEl.disabled = true;
   btnSaveEl.addEventListener('click', async () => {
     if (!auth.currentUser) { alert('Devi fare il login prima.'); return; }
-    await set(themeRef, readFromDOM());
+    await set(themeRef, fullTheme(readFromDOM()));
+    layoutHint();
     btnSaveEl.classList.add('saved');
     btnSaveEl.textContent = '✓ Salvato';
     setTimeout(() => {
@@ -806,6 +1032,7 @@
     const cur = readFromDOM();
     const base = { ...DEFAULTS };
     FRAME_KEYS.forEach(k => { base[k] = cur[k]; });
+    fullTheme(base);              // le posizioni dei profili restano come sono
     writeToDom(base);
     set(themeRef, base);
     toast('Tema predefinito ripristinato');

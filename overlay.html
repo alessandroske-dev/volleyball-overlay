@@ -22,6 +22,16 @@
     --ov-op-score:   1;
     --fr-top: 0px; --fr-right: 0px; --fr-bottom: 0px; --fr-left: 0px;
     --fr-radius: 0px; --fr-line: 0px; --fr-color: #000000;
+    /* Posizioni regolabili da tema.html (profili): x/y in px sulla base 1920x1080, s = scala. Valori di partenza = nessuna modifica. */
+    --sb-x: 0px;   --sb-y: 0px;   --sb-s: 1;
+    --comp-x: 0px; --comp-y: 0px; --comp-s: 1;
+    --sp-x: 0px;   --sp-y: 0px;   --sp-s: 1;
+    --tk-x: 0px;   --tk-y: 0px;   --tk-s: 1;
+    --ad-x: 0px;   --ad-y: 0px;   --ad-s: 1;
+    --sc-x: 0px;   --sc-y: 0px;   --sc-s: 1;
+    --pc-x: 0px;   --pc-y: 0px;
+    /* Larghezza/altezza di riferimento della scena: se la scena viene adattata alla finestra valgono 1920px/1080px (le imposta lo script) */
+    --sw: 100vw;   --sh: 100vh;
   }
 
   /* CORNICE: copre i bordi dell'immagine della diretta (si regola da tema.html).
@@ -36,7 +46,7 @@
   }
 
   /* COMPETITION */
-  #competition { position: absolute; top: 32px; left: 40px; animation: slideIn 0.6s ease both; }
+  #competition { position: absolute; top: 32px; left: 40px; transform-origin: 0 0; transform: translate(var(--comp-x), var(--comp-y)) scale(var(--comp-s)); animation: slideIn 0.6s ease both; }
   .comp-label { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: #ffffff; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,0.9); display: block; }
   .comp-name  { font-size: 24px; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; text-shadow: 0 2px 14px rgba(0,0,0,0.95); display: block; }
 
@@ -48,6 +58,7 @@
     display: none; align-items: center; justify-content: center;
     max-width: 300px; min-width: 120px; max-height: 120px;
     box-shadow: 0 4px 28px rgba(0,0,0,0.55);
+    transform-origin: 100% 0; transform: translate(var(--sp-x), var(--sp-y)) scale(var(--sp-s));
     animation: fadeIn 0.4s ease both;
   }
   #sponsor.visible { display: flex; }
@@ -60,7 +71,7 @@
   }
 
   /* SCOREBOARD */
-  #scoreboard { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75)); overflow: visible; }
+  #scoreboard { position: absolute; bottom: 40px; left: 50%; transform-origin: 50% 100%; transform: translate(calc(-50% + var(--sb-x)), var(--sb-y)) scale(var(--sb-s)); display: flex; align-items: center; filter: drop-shadow(0 6px 28px rgba(0,0,0,0.75)); overflow: visible; }
 
   .team-block { display: flex; align-items: center; background: var(--ov-names-bg, var(--ov-score-bg)); height: var(--ov-sb-height); padding: 0 22px; gap: 14px; min-width: 260px; }
   .team-block.home { clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 100%, 0 100%); padding-right: 32px; }
@@ -93,7 +104,8 @@
     position: absolute;
     bottom: 4px;
     left: 50%;
-    transform: translateX(-50%);
+    transform-origin: 50% 100%;
+    transform: translate(calc(-50% + var(--tk-x)), var(--tk-y)) scale(var(--tk-s));
     /* FIX: width esplicita — in OBS browser source 100vw può non coincidere con il body 1920px */
     width: 1920px;
     display: none;
@@ -158,7 +170,8 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform-origin: 50% 50%;
+    transform: translate(calc(-50% + var(--sc-x)), calc(-50% + var(--sc-y))) scale(var(--sc-s));
     width: 860px;
     background: rgba(15,15,15,0.96);
     border-radius: 18px;
@@ -220,15 +233,16 @@
   .scout-pct.home { color: var(--ov-accent); text-align: left; }
   .scout-pct.away { color: var(--ov-away); text-align: right; }
 
-  @keyframes slideIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
-  @keyframes fadeIn  { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  @keyframes slideIn { from { opacity: 0; transform: translate(calc(var(--comp-x) - 24px), var(--comp-y)) scale(var(--comp-s)); } to { opacity: 1; transform: translate(var(--comp-x), var(--comp-y)) scale(var(--comp-s)); } }
+  @keyframes fadeIn  { from { opacity: 0; transform: translate(var(--sp-x), var(--sp-y)) scale(calc(var(--sp-s) * 0.9)); } to { opacity: 1; transform: translate(var(--sp-x), var(--sp-y)) scale(var(--sp-s)); } }
 
   /* AD BANNER — carosello multi-slide */
   #ad-banner {
     position: absolute;
     bottom: 125px;
     left: 50%;
-    transform: translateX(-50%) translateY(16px);
+    transform-origin: 50% 100%;
+    transform: translate(calc(-50% + var(--ad-x)), calc(16px + var(--ad-y))) scale(var(--ad-s));
     background: rgba(15,15,15,0.96);
     border-radius: 14px;
     border-left: 4px solid #ec4899;
@@ -247,7 +261,7 @@
   #ad-banner.show {
     opacity: 1;
     visibility: visible;
-    transform: translateX(-50%) translateY(0);
+    transform: translate(calc(-50% + var(--ad-x)), var(--ad-y)) scale(var(--ad-s));
     transition: opacity 0.4s ease, transform 0.4s ease, visibility 0s linear 0s;
   }
   /* Le slide sono posizionate in un viewport interno */
@@ -323,8 +337,8 @@
      del segnapunti e sotto il nome della competizione, anche quando la sorgente web è più piccola di 1920x1080
      (come in Prism). Tutto dentro la scheda è in "em", quindi si ridimensiona insieme a lei. */
   #pres-card {
-    --pc-h: min(820px, calc(100vh - 150px - var(--ov-sb-height) - 3.5vh));
-    position: absolute; left: 3.2vw; bottom: calc(40px + var(--ov-sb-height) + 3.5vh);
+    --pc-h: min(820px, calc(var(--sh) - 150px - var(--ov-sb-height) - var(--sh) * 0.035));
+    position: absolute; left: calc(var(--sw) * 0.032 + var(--pc-x)); bottom: calc(40px + var(--ov-sb-height) + var(--sh) * 0.035 - var(--pc-y));
     height: var(--pc-h); width: calc(var(--pc-h) * 0.8); font-size: calc(var(--pc-h) / 20);
     display: flex; flex-direction: column;
     background: var(--ov-score-bg); border: 0.16em solid var(--ov-accent); border-radius: 1em;
@@ -343,7 +357,7 @@
   #pres-card .pc-name { font-size: 1.04em; font-weight: 700; line-height: 1.15; color: #dbe6ff; white-space: nowrap; overflow: hidden; }
   #pres-card .pc-role { display: inline-block; margin-top: 0.3em; background: var(--ov-accent); color: var(--ov-score-text); font-size: 0.77em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 999px; padding: 0.1em 0.6em; }
   /* lato destro (partite fuori casa): la scheda va sul lato del nome della squadra ospite; più bassa per non toccare lo sponsor in alto a destra */
-  #pres-card.right { left: auto; right: 3.2vw; transform: translateX(30px); --pc-h: min(820px, calc(100vh - 190px - var(--ov-sb-height) - 3.5vh)); }
+  #pres-card.right { left: auto; right: calc(var(--sw) * 0.032 - var(--pc-x)); transform: translateX(30px); --pc-h: min(820px, calc(var(--sh) - 190px - var(--ov-sb-height) - var(--sh) * 0.035)); }
   #pres-card.right.in { transform: translateX(0); }
 </style>
 </head>
@@ -580,6 +594,45 @@
     l.href='https://fonts.googleapis.com/css2?family='+map[family]+'&display=swap';
     document.head.appendChild(l);
   }
+  // ── ADATTAMENTO ALLA FINESTRA E POSIZIONI (profili) ───────────────
+  // Profilo scelto dal link: overlay.html?profilo=prism (senza, vale "default").
+  // Le posizioni si regolano da tema.html e stanno in theme/profiles/<profilo>; un profilo mai salvato usa "default".
+  // Adattamento: se la finestra è diversa da 1920x1080 (es. la sorgente web di Prism) la scena viene scalata e centrata.
+  const PROFILE = ((new URLSearchParams(location.search).get('profilo') || 'default').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 20)) || 'default';
+  const LAYOUT_ITEMS = ['sb', 'comp', 'sp', 'tk', 'ad', 'sc', 'pc'];
+  let fitOn = true;
+  function fitStage() {
+    const b = document.body.style;
+    const k = Math.min(innerWidth / 1920, innerHeight / 1080);
+    const ox = (innerWidth - 1920 * k) / 2, oy = (innerHeight - 1080 * k) / 2;
+    const identity = Math.abs(k - 1) < 0.001 && Math.abs(ox) < 0.5 && Math.abs(oy) < 0.5;   // finestra già 1920x1080 (OBS): niente da fare
+    if (!fitOn || !isFinite(k) || k <= 0 || identity) {
+      b.transform = ''; b.transformOrigin = '';
+      b.setProperty('--sw', '100vw'); b.setProperty('--sh', '100vh');
+      return;
+    }
+    b.transformOrigin = '0 0';
+    b.transform = 'translate(' + ox + 'px,' + oy + 'px) scale(' + k + ')';
+    b.setProperty('--sw', '1920px'); b.setProperty('--sh', '1080px');
+  }
+  window.addEventListener('resize', fitStage);
+  fitStage();
+  function applyLayout(t) {
+    const profiles = (t && t.profiles && typeof t.profiles === 'object') ? t.profiles : {};
+    const L = profiles[PROFILE] || profiles.default || {};
+    const items = (L.items && typeof L.items === 'object') ? L.items : {};
+    const s = document.body.style;
+    const n = (v, d, lo, hi) => { v = Number(v); if (!isFinite(v)) v = d; return Math.min(hi, Math.max(lo, v)); };
+    LAYOUT_ITEMS.forEach(k => {
+      const it = items[k] || {};
+      s.setProperty('--' + k + '-x', n(it.x, 0, -1920, 1920) + 'px');
+      s.setProperty('--' + k + '-y', n(it.y, 0, -1080, 1080) + 'px');
+      s.setProperty('--' + k + '-s', n(it.s, 100, 30, 300) / 100);
+    });
+    fitOn = L.fit !== false;
+    fitStage();
+  }
+
   function applyTheme(t) {
     if (!t) return;
     const s = document.body.style;
@@ -626,6 +679,7 @@
       s.setProperty('--fr-color',  /^#[0-9a-f]{6}$/i.test(t.frameColor || '') ? t.frameColor : '#000000');
       document.getElementById('frame').classList.toggle('on', t.frameOn === true);
     }
+    applyLayout(t);
   }
   onValue(ref(db, 'theme'), (snap) => { applyTheme(snap.val()); });
 
